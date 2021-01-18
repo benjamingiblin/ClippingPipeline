@@ -16,23 +16,48 @@ This series of codes start from shear catalogues perform the following, either w
  * The unclipped shear catalogue is also fed to TreeCorr to calculate the conventional, "unclipped" shear correlation functions.
 
 
+## General line used to execute the pipeline:
+
+For simulations
+./Master_CorrFun_ByParts.sh Sims_Run param_files/<input parameter file> <los_start> <los_end>
+where one simply needs to designate the input parameter file, and the line of sight numbers (IDs of the simulation catalogues) to start and end the clipping on.
+
+Note that on the supercomputer cuillin,	you will be having cuillin run the pipeline on its various workhorse computers (hereafter, referred to simply as "workers"). This means you will be changing that line above in the Launch.sh script (explained in the next section), and running it repeatedly.
+
+
+## Installation
+
+For this pipeline to work, you need to have already installed an anaconda python distribution from, e.g., https://docs.anaconda.com/anaconda/install/
+
+Then, follow these steps to install:
+
+
+
+
 
 ## The most important codes at a glance
 
-** (0) Launch.sh **
+*(0) Launch.sh*
 
-The slurm script which launches the clipping pipeline on cuillin. This asks for the clipping pipeline job to be put in the queue to run on one of the cuillin workers. I have set the memory request of the launch script low enough so that the clipping pipeline will get to the front of the queue quickly, but not so low that the job fails. 
+ * Executed as: sbatch Launch.sh 
 
-** (1) Master_CorrFun_ByParts.sh **
+This script "launches" the clipping pipeline on cuillin. This means that the script asks for the clipping pipeline job to be put in the queue to run on one of the cuillin workers. I have set the memory request of the launch script low enough so that the clipping pipeline will get to the front of the queue quickly, but not so low that the job fails. 
+
+*(1) Master_CorrFun_ByParts.sh*
+
+ * Executed as ./Master_CorrFun_ByParts.sh Sims_Run param_files/<input parameter file> <los_start> <los_end>
+ * (note this will only work on a cuillin worker, not on the head node itself).
 
 The master bash script that runs the whole pipeline. It takes an input parameter file which specifies the details of the calculation (more on this below). The master script first of all executes scripts which find the relevant input shear catalogues specified by the parameter file, sets up temporary directories on the cuillin workers to save outputs to, and copies some files over to the cuillin worker. It then starts running the pipeline.
 
-** (2) SkelePipeline_PartI.sh and SkelePipeline_PartII.sh **
+*(2) SkelePipeline_PartI.sh and SkelePipeline_PartII.sh*
 The two bash scripts, executed by Master_CorrFun_ByParts.sh, which run the first part and second parts of the pipeline respectively.
 
+ * Executed as ./SkelePipeline_PartI.sh Sims_Run param_files/<input parameter file> <los_start> <los_end> 
+    
 SkelePipeline_PartI.sh runs the following:
- * KiDSMocks_DataGrab.sh/KiDS450_DataGrab.sh - accesses the input simulated/data shear catalogues.
- * Sims_DataGrab.py - performs redshift cuts, injects random galaxy shape noise to the simulated catalogues.
+ * KiDSMocks_DataGrab.sh/KiDS450_DataGrab.sh - accesses the input simulated/data shear catalogues and applies redshift cuts.
+ * Sims_DataGrab.py - injects random galaxy shape noise to the simulated catalogues.
  * Mass_Recon/MassMapLvW.sh - performs the shear-to-kappa mass reconstruction.
  * Clipping_K/get_clipped_shear.py - clips the kappa maps, converts kappa back to shear, and saves a clipped shear catalogue.
 
@@ -43,4 +68,9 @@ SkelePipeline_PartII.sh runs the following:
 
 ## More detail on the codes
 
-** (4) 
+*(4) KiDSMocks_DataGrab.sh*
+
+This code pulls the (RA, Dec, shear1, shear2, weight, z_spec, z_phot) information out of the whatever shear catalogue is specified by the input parameter file. This code applies the specified redshift cuts and saves an output shear catalogue. 
+
+
+
