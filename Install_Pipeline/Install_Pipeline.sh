@@ -35,7 +35,8 @@ pipeline_DIR=/home/bengib/Clipping_SimsLvW/
 KiDS_Data_DIR=/home/bengib/KiDS450/
 KiDS_Mask_DIR=/home/bengib/KiDS450/
 	
-SLICS_KiDS_DIR=/disk09/jharno/MockProducts/KiDS450/
+SLICS_KV450_DIR=/disk10/jharno/MockProducts/KV450/
+SLICS_KiDS1000_DIR=/disk10/jharno/MockProducts/KiDS1000/
 SLICS_Generic_DIR=/disk10/jharno/MockProducts/Generic/
 
 G9_Mask_DIR=/home/bengib/KiDS450/
@@ -81,8 +82,10 @@ find ../Clipping_SimsLvW/ -type f -exec sed -i "s#pipeline_DIR=.*#pipeline_DIR=\
 find ../Clipping_SimsLvW/ -type f -exec sed -i "s#kids450_dir=.*#kids450_dir=\'$KiDS_Data_DIR\'#" {} +
 find ../Clipping_SimsLvW/ -type f -exec sed -i "s#kids450maskdir=.*#kids450maskdir=\'$KiDS_Mask_DIR\'#" {} +
 # SLICS
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#mocksdir=.*#mocksdir=\'$SLICS_KiDS_DIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#mocksdir=.*#mocksdir=\'$SLICS_Generic_DIR\'#" {} +
+find ../Clipping_SimsLvW/ -type f -exec sed -i "s#SLICS_KV450_DIR=.*#SLICS_KV450_DIR=\'$SLICS_KiDS_DIR\'#" {} +
+find ../Clipping_SimsLvW/ -type f -exec sed -i "s#SLICS_KiDS1000_DIR=.*#SLICS_KiDS1000_DIR=\'$SLICS_KiDS_DIR\'#" {} +
+find ../Clipping_SimsLvW/ -type f -exec sed -i "s#SLICS_Generic_DIR=.*#SLICS_Generic_DIR=\'$SLICS_Generic_DIR\'#" {} +
+
 # Masks to apply to SLICS
 find ../Clipping_SimsLvW/ -type f -exec sed -i "s#G9maskdir=.*#G9maskdir=\'$G9_Mask_DIR\'#" {} +
 find ../Clipping_SimsLvW/ -type f -exec sed -i "s#W3maskdir=.*#W3maskdir=\'$W3_Mask_DIR\'#" {} +

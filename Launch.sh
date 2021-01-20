@@ -19,8 +19,7 @@ ZBcut=$2
 los_start=$3
 los_end=$4
 
-./Master_CorrFun_ByParts.sh Sims_Run /home/bengib/Clipping_SimsLvW/param_files/100Sqdeg_SN${SN}_NoMask_KiDS1000GpAM_X3sigma_SS1_zKiDS1000_ZBcut${ZBcut}_ThBins9_MRres60arcsec $los_start $los_end
-
+./Master_CorrFun_ByParts.sh Sims_Run /home/bengib/Clipping_SimsLvW/param_files/100Sqdeg_SN${SN}_NoMask_KiDS1000GpAM_X3sigma_SS9.33_zKiDS1000_ZBcut${ZBcut}_ThBins9_MRres60arcsec $los_start $los_end
 
 #### The 10arcsec res + shape noise SLICS used for Chris' project:
 #### 100Sqdeg_SN0.28_NoMask_LSSTGpAM_X3sigma_SS17_zLSST_ZBcut0.6-1.4_ThBins9

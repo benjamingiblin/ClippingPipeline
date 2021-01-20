@@ -121,7 +121,7 @@ rm -f $removal2
 removal2b=$data_DIR/Clipping_K/$DIRname/$remove_keyword.asc
 rm -f $removal2b
 removal2c=$data_DIR/Correlation_Function/$DIRname/$remove_keyword.Std.asc
-rm -f $removal2c
+#rm -f $removal2c
 
 
 

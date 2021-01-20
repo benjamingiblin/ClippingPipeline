@@ -8,8 +8,7 @@
 
 
 pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
-													# If running on a supercomputer, these will be different
+data_DIR='/data/bengib/Clipping_SimsLvW/'     # If running on a supercomputer, these will be different
 
 source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5 
 
@@ -160,7 +159,7 @@ rm -f $timerfile # remove the one already there, don't just peg onto old one.
 echo "Time at which pipeline started: $(date)" >> $timerfile
 
 # Now loop over the Fields/LOS
-for Part in I; do  # I II 
+for Part in I II; do  # I II 
 	counter=0
 	for f in ${Loop_Array[*]}; 
 	do

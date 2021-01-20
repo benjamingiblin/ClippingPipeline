@@ -11,7 +11,7 @@
 #  ------------------------- PART I -------------------------
 # 0. KiDSMocks_DataGrab.sh or KiDS450_DataGrab.sh (KiDS_Run & 100 sqdeg Sims_Run ONLY)
 # 1. Sims_DataGrab.py
-# 2. runmass.sh (<Mass_Recon>)
+# 2. Mass_Recon/MassMapLvW.sh 
 # 3. get_clipped_shear.py (<Clipping_K>)
 #  ------------------------- PART II -------------------------
 # 4. Convert_2_AthenaHamana.sh(<Correlation_Function>)
@@ -125,10 +125,8 @@ cd $pipeline_DIR
 
 
 
-
-# !!! GIBLIN CHANGE THIS BACK !!!
 # 3. get_clipped_shear.py (<Clipping_K>) 
-#python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
+python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
 if [ $? -eq 1 ]; then
 	echo "$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline."
 	printf "\n$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline." > $pipeline_DIR/Error_Reports/Error_Report.txt

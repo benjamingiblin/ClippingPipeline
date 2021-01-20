@@ -148,23 +148,8 @@ if [ "$RUN" == "Sims_Run" ]; then
 		    if [ "$z" == "KiDS1000" ]; then
 			SLICS_KiDS_DIR=${SLICS_KiDS1000_DIR}
 			
-			# But which redshift bin? JHD's directories for KiDS-1000 are different for each zbin:
-			if [ "$zlo" == "0.1" ] && [ "$zhi" == "0.3" ]; then
-			    bin_name="bin1"
-			elif [ "$zlo" == "0.3" ] && [ "$zhi" == "0.5" ]; then
-			    bin_name="bin2"
-			elif [ "$zlo" == "0.5" ] && [ "$zhi" == "0.7" ]; then
-			    bin_name="bin3"
-			elif [ "$zlo" == "0.7" ] && [ "$zhi" == "0.9" ]; then
-			    bin_name="bin4"
-			elif [ "$zlo" == "0.9" ] && [ "$zhi" == "1.2" ]; then
-			    bin_name="bin5"
-			else
-			    echo "You have set z to KiDS1000. In this case, zlo & zhi must be consecutive numbers from:"
-			    echo " 0.1, 0.3, 0.5, 0.7, 0.9, 1.2 (i.e. the bins used in KiDS1000 cosmic shear)."
-			    echo "But you have set zlo and zhi to $zlo, $zhi. Not programmed to deal with this shit. EXITING."
-			    exit
-			fi
+			# But which redshift bin? JHD's directories for KiDS-1000 are different for each zbin:		       
+			source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 			SLICS_KiDS_DIR+="/$bin_name"
 			fname_tag="KiDS1000_${bin_name}"
 						
