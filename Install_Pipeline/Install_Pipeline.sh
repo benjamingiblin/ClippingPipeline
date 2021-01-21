@@ -16,16 +16,18 @@
 
 echo " An exit statement is in place just after this line, to prevent Install_Pipeline.sh being ran accidentally."
 echo " Comment this out to continue"
-exit 0
+#exit 0
 
 
 # !!! ATTENTION !!!
-# Before running this code to install the pipeline, you need to change the following directories
-# to reflect where your KiDS-450 data, SLICS and Mira Titan mocks are. 
+# Before running this code to install the pipeline, you need to do the following:
+# 1. move the Install_Pipeline directory upwards one level: mv Install_Pipeline ../
+# 2. change the following directories to reflect where your KiDS-450 data, SLICS and Mira Titan mocks are,
+#    if you're running on cuillin, leave these alone.
 
-# IMPORTANT: Decide if you want the place the pipeline/codes exist (pipeline_DIR)
-# if you are running this on cuillin, you'll want your data_DIR=/data/<username>/Clipping_SimsLvW/
-# and your pipeline_DIR=/home/<username>/Clipping_SimsLvW/
+# If you are running this on cuillin, you'll want to set:
+# data_DIR=/data/<username>/Clipping_SimsLvW/
+# and set pipeline_DIR to the directory you have cloned the repo into.
 
 data_DIR=/data/bengib/Clipping_SimsLvW/
 pipeline_DIR=/home/bengib/Clipping_SimsLvW/
@@ -125,7 +127,10 @@ cd $pipeline_DIR/Mass_Recon/src/
 #find . -type f -exec sed -i "s#/home/cech/cookbook.f90#$address#" {} +
 
 # compile mass recon codes
-ifort cat2grid_fromasc.f90 -o cat2grid_fromasc.a -L/usr/local/share/cfitsio/ -lcfitsio
+module load intel
+#####ifort cat2grid_fromasc.f90 -o cat2grid_fromasc.a -L/usr/local/share/cfitsio/ -lcfitsio
+ifort cat2grid_fromasc.f90 -o cat2grid_fromasc.a -L/usr/local/share/cfitsio/ -lcfitsio -O0 -CB 
+
 ifort massrecon_new.f90 -o massrecon_new.a -L/usr/local/share/cfitsio/ -lcfitsio -L/roe/intel/Compiler/11.1/072/mkl/lib/em64t/ -Wl,--start-group -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -Wl,--end-group -qopenmp -lpthread -L/usr/lib -lm -lfftw3
 
-cd $pipeline_DIR/Install_Pipeline/
+cd ../../../Install_Pipeline/
