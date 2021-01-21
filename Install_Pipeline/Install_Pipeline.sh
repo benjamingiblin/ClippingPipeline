@@ -16,7 +16,7 @@
 
 echo " An exit statement is in place just after this line, to prevent Install_Pipeline.sh being ran accidentally."
 echo " Comment this out to continue"
-#exit 0
+exit 0
 
 
 # !!! ATTENTION !!!
@@ -24,10 +24,9 @@ echo " Comment this out to continue"
 # to reflect where your KiDS-450 data, SLICS and Mira Titan mocks are. 
 
 # IMPORTANT: Decide if you want the place the pipeline/codes exist (pipeline_DIR)
-# to ALSO be the place your output files get saved (data_DIR).
-# You may not want this if you are delegating tasks to workers on a sumpercomputer.
-# !!! PLEASE NOTE !!! If you want to change whether data_DIR and pipeline_DIR are the same or not,
-# You will have to change those variables here and RE-RUN THIS SCRIPT.
+# if you are running this on cuillin, you'll want your data_DIR=/data/<username>/Clipping_SimsLvW/
+# and your pipeline_DIR=/home/<username>/Clipping_SimsLvW/
+
 data_DIR=/data/bengib/Clipping_SimsLvW/
 pipeline_DIR=/home/bengib/Clipping_SimsLvW/
 
@@ -74,53 +73,53 @@ athena="$(which athena)"
 # Begin editing codes.
 
 # 0. pipeline_ and data_DIR
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#data_DIR=.*#data_DIR=\'$data_DIR\'#" {} + 
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#pipeline_DIR=.*#pipeline_DIR=\'$pipeline_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#data_DIR=.*#data_DIR=\'$data_DIR\'#" {} + 
+find $pipeline_DIR -type f -exec sed -i "s#pipeline_DIR=.*#pipeline_DIR=\'$pipeline_DIR\'#" {} +
 
 # 1. IF USING pipeline_DIR
 # KiDS-450 data and mask
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#kids450_dir=.*#kids450_dir=\'$KiDS_Data_DIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#kids450maskdir=.*#kids450maskdir=\'$KiDS_Mask_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#kids450_dir=.*#kids450_dir=\'$KiDS_Data_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#kids450maskdir=.*#kids450maskdir=\'$KiDS_Mask_DIR\'#" {} +
 # SLICS
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#SLICS_KV450_DIR=.*#SLICS_KV450_DIR=\'$SLICS_KiDS_DIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#SLICS_KiDS1000_DIR=.*#SLICS_KiDS1000_DIR=\'$SLICS_KiDS_DIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#SLICS_Generic_DIR=.*#SLICS_Generic_DIR=\'$SLICS_Generic_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#SLICS_KV450_DIR=.*#SLICS_KV450_DIR=\'$SLICS_KiDS_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#SLICS_KiDS1000_DIR=.*#SLICS_KiDS1000_DIR=\'$SLICS_KiDS_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#SLICS_Generic_DIR=.*#SLICS_Generic_DIR=\'$SLICS_Generic_DIR\'#" {} +
 
 # Masks to apply to SLICS
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#G9maskdir=.*#G9maskdir=\'$G9_Mask_DIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#W3maskdir=.*#W3maskdir=\'$W3_Mask_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#G9maskdir=.*#G9maskdir=\'$G9_Mask_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#W3maskdir=.*#W3maskdir=\'$W3_Mask_DIR\'#" {} +
 # Mira Titan 
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#MTdir=.*#MTdir=\'$MiraTitan_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#MTdir=.*#MTdir=\'$MiraTitan_DIR\'#" {} +
 # DH10
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#DH10_dir=.*#DH10_dir=\'$DH10_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#DH10_dir=.*#DH10_dir=\'$DH10_DIR\'#" {} +
 
 
 # 2. IF USING data_DIR
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#kids450_datadir=.*#kids450_datadir=\'$KiDS_Data_dataDIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#kids450mask_datadir=.*#kids450mask_datadir=\'$KiDS_Mask_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#kids450_datadir=.*#kids450_datadir=\'$KiDS_Data_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#kids450mask_datadir=.*#kids450mask_datadir=\'$KiDS_Mask_dataDIR\'#" {} +
 # SLICS
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_KiDS_dataDIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_Generic_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_KiDS_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_Generic_dataDIR\'#" {} +
 # Masks to apply to SLICS
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#G9mask_datadir=.*#G9mask_datadir=\'$G9_Mask_dataDIR\'#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#W3mask_datadir=.*#W3mask_datadir=\'$W3_Mask_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#G9mask_datadir=.*#G9mask_datadir=\'$G9_Mask_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#W3mask_datadir=.*#W3mask_datadir=\'$W3_Mask_dataDIR\'#" {} +
 # Mira Titan 
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#MT_datadir=.*#MT_datadir=\'$MiraTitan_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#MT_datadir=.*#MT_datadir=\'$MiraTitan_dataDIR\'#" {} +
 # DH10
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#DH10_datadir=.*#DH10_datadir=\'$DH10_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#DH10_datadir=.*#DH10_datadir=\'$DH10_dataDIR\'#" {} +
 
 # Executables
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#ldactoasc=.*#ldactoasc=$ldactoasc#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#sky2xy=.*#sky2xy=$sky2xy#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#xy2sky=.*#xy2sky=$xy2sky#" {} +
-find ../Clipping_SimsLvW/ -type f -exec sed -i "s#athena=.*#athena=$athena#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#ldactoasc=.*#ldactoasc=$ldactoasc#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#sky2xy=.*#sky2xy=$sky2xy#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#xy2sky=.*#xy2sky=$xy2sky#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#athena=.*#athena=$athena#" {} +
 
 
 
 
 # Some things to do with the mass reconstruction fortran codes
 # change line that directs to the cookbook.f90
-cd ../Clipping_SimsLvW/Mass_Recon/src/
+cd $pipeline_DIR/Mass_Recon/src/
 # no longer necessary
 #address=$(find `pwd` -name "cookbook.f90" )
 #find . -type f -exec sed -i "s#/home/cech/cookbook.f90#$address#" {} +
@@ -129,4 +128,4 @@ cd ../Clipping_SimsLvW/Mass_Recon/src/
 ifort cat2grid_fromasc.f90 -o cat2grid_fromasc.a -L/usr/local/share/cfitsio/ -lcfitsio
 ifort massrecon_new.f90 -o massrecon_new.a -L/usr/local/share/cfitsio/ -lcfitsio -L/roe/intel/Compiler/11.1/072/mkl/lib/em64t/ -Wl,--start-group -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -Wl,--end-group -qopenmp -lpthread -L/usr/lib -lm -lfftw3
 
-cd ../../../Install_Pipeline/
+cd $pipeline_DIR/Install_Pipeline/
