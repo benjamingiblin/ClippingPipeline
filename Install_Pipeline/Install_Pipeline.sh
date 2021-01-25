@@ -68,7 +68,7 @@ DH10_dataDIR=$data_DIR/DH10_Mocks/FaLCoNS/
 # If they're not, please add them to $PATH via your bashrc
 sky2xy="$(which sky2xy)"
 xy2sky="$(which xy2sky)"
-ldactoasc=/home/erben/software/theli-1.18.0/bin/Linux_64/ldactoasc_theli #"$(which ldactoasc)"
+ldactoasc=/home/cech/software/theli-1.30.0/bin/Linux_64//ldactoasc_theli #"$(which ldactoasc)"
 athena="$(which athena)"
 
 
@@ -83,8 +83,8 @@ find $pipeline_DIR -type f -exec sed -i "s#pipeline_DIR=.*#pipeline_DIR=\'$pipel
 find $pipeline_DIR -type f -exec sed -i "s#kids450_dir=.*#kids450_dir=\'$KiDS_Data_DIR\'#" {} +
 find $pipeline_DIR -type f -exec sed -i "s#kids450maskdir=.*#kids450maskdir=\'$KiDS_Mask_DIR\'#" {} +
 # SLICS
-find $pipeline_DIR -type f -exec sed -i "s#SLICS_KV450_DIR=.*#SLICS_KV450_DIR=\'$SLICS_KiDS_DIR\'#" {} +
-find $pipeline_DIR -type f -exec sed -i "s#SLICS_KiDS1000_DIR=.*#SLICS_KiDS1000_DIR=\'$SLICS_KiDS_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#SLICS_KV450_DIR=.*#SLICS_KV450_DIR=\'$SLICS_KV450_DIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#SLICS_KiDS1000_DIR=.*#SLICS_KiDS1000_DIR=\'$SLICS_KiDS1000_DIR\'#" {} +
 find $pipeline_DIR -type f -exec sed -i "s#SLICS_Generic_DIR=.*#SLICS_Generic_DIR=\'$SLICS_Generic_DIR\'#" {} +
 
 # Masks to apply to SLICS
@@ -100,8 +100,9 @@ find $pipeline_DIR -type f -exec sed -i "s#DH10_dir=.*#DH10_dir=\'$DH10_DIR\'#" 
 find $pipeline_DIR -type f -exec sed -i "s#kids450_datadir=.*#kids450_datadir=\'$KiDS_Data_dataDIR\'#" {} +
 find $pipeline_DIR -type f -exec sed -i "s#kids450mask_datadir=.*#kids450mask_datadir=\'$KiDS_Mask_dataDIR\'#" {} +
 # SLICS
-find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_KiDS_dataDIR\'#" {} +
-find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_Generic_dataDIR\'#" {} +
+#find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_KiDS_dataDIR\'#" {} +
+#find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_Generic_dataDIR\'#" {} +
+
 # Masks to apply to SLICS
 find $pipeline_DIR -type f -exec sed -i "s#G9mask_datadir=.*#G9mask_datadir=\'$G9_Mask_dataDIR\'#" {} +
 find $pipeline_DIR -type f -exec sed -i "s#W3mask_datadir=.*#W3mask_datadir=\'$W3_Mask_dataDIR\'#" {} +
