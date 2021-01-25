@@ -99,9 +99,6 @@ find $pipeline_DIR -type f -exec sed -i "s#DH10_dir=.*#DH10_dir=\'$DH10_DIR\'#" 
 # 2. IF USING data_DIR
 find $pipeline_DIR -type f -exec sed -i "s#kids450_datadir=.*#kids450_datadir=\'$KiDS_Data_dataDIR\'#" {} +
 find $pipeline_DIR -type f -exec sed -i "s#kids450mask_datadir=.*#kids450mask_datadir=\'$KiDS_Mask_dataDIR\'#" {} +
-# SLICS
-#find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_KiDS_dataDIR\'#" {} +
-#find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_Generic_dataDIR\'#" {} +
 
 # Masks to apply to SLICS
 find $pipeline_DIR -type f -exec sed -i "s#G9mask_datadir=.*#G9mask_datadir=\'$G9_Mask_dataDIR\'#" {} +
