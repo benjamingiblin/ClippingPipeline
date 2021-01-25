@@ -28,16 +28,24 @@ if [ "$RUN" == "Sims_Run" ]; then
     orig=$data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_Xm_Ym_e1_e2_w.dat
     out_orig=$outdir/$name."$gpam"GpAM.LOS$los.ORIG.ThetaX_ThetaY_e1_e2_w.Std.asc
     
-    if [ "$sqdeg" == "60" ] || [ "$sqdeg" == "100" ] || [ "$sqdeg" == "36" ]; then       # You're doing working with a flat sky simulation
-		# Need this for low resolution runs.
-		echo "MRres is $MRres"
+    if [ "$sqdeg" == "100" ] || [ "$sqdeg" == "36" ]; then
+	# You're doing working with a flat sky simulation
+	# Need to identify the mass resolution to convert pixel coords back to angular sizes:
+	echo "MRres is $MRres"
+	
 	if [ "$MRres" == "" ] || [ "$MRres" == "-" ] || [ "$MRres" == "5arcs" ]; then
 	    angle_conversion=0.001388888888889 #deg/pxl = 5 arcsec / pxl. The default mass recon resolution.
-	elif [ "$MRres" == "arcmin" ]; then
-	    angle_conversion=0.01666667 # deg/pxl.
-	else
-	    tmp=$(echo ${MRres%a*}) # strip the number in front of 'arcmin'
+
+	elif [[ $MRres == *"arcmin"* ]]; then
+	    # MRres given in units of arcmin (but not necessarily 1arcmin):
+	    tmp=$(echo ${MRres%arcmin*})              # strip the number in front of 'arcmin'
 	    angle_conversion=$(expr $tmp*0.01666667 | bc)
+	    
+	elif [[ $MRres == *"arcs"* ]]; then
+	    # MRres is given in units of arcseconds:
+	    tmp=$(echo ${MRres%arcs*})                # strip the number in front of 'arcsec'
+	    angle_conversion=$(expr $tmp*0.0002777777778 | bc) # convert to deg/pxl
+	    
 	fi
 	echo "Resolution of mass reconstruction is $angle_conversion deg/pxl"
 	awk -v PSm=$angle_conversion '{print $1=$1*PSm,$2=$2*PSm,$3,$4,$5}' < $in_rc > $out_rc

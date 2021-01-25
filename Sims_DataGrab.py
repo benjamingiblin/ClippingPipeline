@@ -99,36 +99,7 @@ def Generate_Unitary_Shape_Noise(seedy, SN_level):
 	return e_rng
 
 
-if sqdeg==60:
-
-	mocks60_datadir='/data/bengib/Clipping_SimsLvW//SLICS_60/'
-	mocks60_datadir += 'z_%s'%z
-	hdulist1 = fits.open('%s/%sgamma1_weight.dat_LOS%s.fits'%(mocks60_datadir,z,los))
-	hdulist2 = fits.open('%s/%sgamma2_weight.dat_LOS%s.fits'%(mocks60_datadir,z,los))
-	grid1 = hdulist1[0].data
-	grid2 = hdulist2[0].data
-
-
-	# Convert gal/sq arcmin into a number of pxls (galaxies) to extract
-	size = int(float(gpam)*216000.) # Multiply by no. of square arcmin in image
-	# The number you end up having in your cat will be less if you do masking
-
-
-	xpxl_len = len(grid1[0,:])
-	ypxl_len = len(grid1[:,0]) # sims are square, so these are the same.
-
-	# Randomly pick pxls and interpolate to get shear:
-	# Randomly pick THE SAME PXLS every time for a given LOS,
-	# BUT different pxls for each successive LOS.
-	np.random.seed(int(los))
-	X = np.random.uniform(0,xpxl_len-1, size) 
-	np.random.seed(2*int(los))
-	Y = np.random.uniform(0,ypxl_len-1, size) 
-
-	e1_temp = interpolate2D(X, Y, grid1) 
-	e2_temp = interpolate2D(X, Y, grid2)
-
-elif sqdeg==36:
+if sqdeg==36:
 	num_rt_cats = 5		# the number of ray tracing catalogues per realisation
 	DH10_datadir='/data/bengib/Clipping_SimsLvW//DH10_Mocks/FaLCoNS/'
 	# get the cosmol number
@@ -137,11 +108,6 @@ elif sqdeg==36:
 	# get the los number + noise cycle number if applicable
 	intlos = int(los.split('n')[0])		
 	# get the realisation number
-	# The following 3 lines I coded in, and then decided must be wrong. Incorrectly gets realisation number for multiples of 5.
-	
-	#if intlos > 0 and intlos % num_rt_cats == 0:
-	#	realisation_number = intlos/num_rt_cats
-	#else:
 	realisation_number = (intlos/num_rt_cats) +1		# realisation numbers index from 1.
 	
 	# get the catalogue number
@@ -187,11 +153,6 @@ if SN == 'ALL' or SN == 'All' or SN == 'all' or 'Cycle' in DIRname:
 		seed2 = int(los) + 201 # made it so all cosmol have same SN.
 								# So only diff in signal is due to cosmol.
         
-    #np.random.seed(seed1)
-	#np.random.normal(0., SN_level, len(e1_temp)) # Add shape noise
-	#np.random.seed(seed2)
-	#np.random.normal(0., SN_level, len(e1_temp))
-
 	# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
 	e1_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
 	e2_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
@@ -229,11 +190,9 @@ e2 = np.imag(e_obs)
 #e2 = e2_temp + e2_rng
 
 
-# Convert coords to mask frame
-X = (X*float(PS))/PSm
-Y = (Y*float(PS))/PSm
-
-
+# Convert X,Y (in arcmin) to coords to mask frame (PSm is in deg/pxl)
+X = X/(PSm*60.)
+Y = Y/(PSm*60.)
 
 
 # Now Apply Mask if name specifies to.
@@ -246,17 +205,6 @@ Weight = np.zeros(No_gals)+1. # Give all gals a weight of unity
 np.savetxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_Xm_Ym_e1_e2_w.dat'%(data_DIR, DIRname, name, gpam, los), np.c_[X, Y, e1, e2, Weight], header = '%s 5'%(No_gals), comments='')
 
 
-# FINALY...
-# (03/02/2017) 
-# Save another catalogue with phoney ra,dec instead of x,y
-# This is so we can load the mock catalogues as healpix maps, and see if 
-# healpix VS Ludo mass reconstruction give the same results.
-if sqdeg == 100 or sqdeg == 60:
-	ra = X*PSm
-	dec = -0.5*(new_sizeY*PSm) + Y*PSm # between (-5,+5) or (-3.95,+3.95)
-									   # depending on if sqdeg is 100 or 60 deg^2
-	
-	np.savetxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_ra_dec_e1_e2_w.dat'%(data_DIR, DIRname, name, gpam, los), np.c_[ra, dec, e1, e2, Weight], comments='')
 
 
 

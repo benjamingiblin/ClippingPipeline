@@ -61,25 +61,8 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 	    mocks_datadir+="/KiDS1000/GalCat/"
 	    keyword_z_phot=z_spec
 	    keyword_z_spec=z_spec # redshift cut already made, so only z_spec is saved.
-
-	    # Annoying, the redshift cuts have already been made on KiDS1000 mocks, so
-	    # we're limited to using catatalogues with the KiDS1000 bins:
-	    if [ "$zlo" == "0.1" ] && [ "$zhi" == "0.3" ]; then
-                bin_name="bin1"
-            elif [ "$zlo" == "0.3" ] && [ "$zhi" == "0.5" ]; then
-                bin_name="bin2"
-            elif [ "$zlo" == "0.5" ] && [ "$zhi" == "0.7" ]; then
-                bin_name="bin3"
-            elif [ "$zlo" == "0.7" ] && [ "$zhi" == "0.9" ]; then
-                bin_name="bin4"
-            elif [ "$zlo" == "0.9" ] && [ "$zhi" == "1.2" ]; then
-                bin_name="bin5"
-            else
-                echo "You have set z to KiDS1000. In this case, zlo & zhi must be consecutive numbers from:"
-                echo " 0.1, 0.3, 0.5, 0.7, 0.9, 1.2 (i.e. the bins used in KiDS1000 cosmic shear)."
-                echo "But you have set zlo and zhi to $zlo, $zhi. Not programmed to deal with this shit. EXITING."
-		exit
-            fi
+	    
+	    source ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 	    filename=GalCatalog_KiDS1000_${bin_name}_LOS${los_fname}.fits
 	    
 	else
@@ -115,34 +98,11 @@ else
     # The Table name and redshift keywords differ between KiDS-like (KV450 & KiDS1000) & Generic (LSST-like)
     if [[ "$z" == *"KiDS"* ]]; then
 	if [ "$z" == "KiDS1000" ]; then
-	    # Infuriatingly for KiDS1000 SLICS, if los>99, Tablename depends on bin (redshift) number
-            if [ "$zlo" == "0.1" ] && [ "$zhi" == "0.3" ]; then
-                bin_name="bin1"
-            elif [ "$zlo" == "0.3" ] && [ "$zhi" == "0.5" ]; then
-                bin_name="bin2"
-            elif [ "$zlo" == "0.5" ] && [ "$zhi" == "0.7" ]; then
-                bin_name="bin3"
-            elif [ "$zlo" == "0.7" ] && [ "$zhi" == "0.9" ]; then
-                bin_name="bin4"
-            elif [ "$zlo" == "0.9" ] && [ "$zhi" == "1.2" ]; then
-                bin_name="bin5"
-            else
-                echo "You have set z to KiDS1000. In this case, zlo & zhi must be consecutive numbers from:"
-                echo " 0.1, 0.3, 0.5, 0.7, 0.9, 1.2 (i.e. the bins used in KiDS1000 cosmic shear)."
-                echo "But you have set zlo and zhi to $zlo, $zhi. Not programmed to deal with this shit. EXITING."
-                exit
-            fi
-
-	    if [ "$los" -gt 99 ]; then
-		Tablename=/disk09/jharno/MockProducts/KV1000/${bin_name}/GalCatalog.dat_LOS${los}
-	    else
-		Tablename=/disk09/jharno/MockProducts/KV1000/GalCatalog.dat_LOS${los}
-	    fi
-	    
-	    keyword_z_phot=z_true
-	    keyword_z_spec=z_true
+	    Tablename=GalCat
+	    keyword_z_phot=z_spec
+	    keyword_z_spec=z_spec
 	else
-	    #Annoyingly the Tablename changes for KV450-SLICS depending on LOS:
+	    # Annoyingly the Tablename changes for KV450-SLICS depending on LOS:
 	    if [ "$los" -gt 215 ]; then
 		Tablename=/data/jharno/KiDS/GalCatalog.dat_LOS${los}
 	    else
@@ -175,13 +135,6 @@ if [ $ZBcut != "None" ]; then
 else
     awk 'NR>6 {print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
 fi
-
-
-
-# Convert x & y arcmin into pxl values of the simulation.
-# Adding shape noise and conversion into MASK frame occurs in Sims_DataGrab.py
-PSs=12.908333 # pxls/arcmin in SIMULATION (= 0.00129115558 deg/pxl)
-awk -v c=$PSs '{print $1=$1*c, $2=$2*c, $3, $4}' $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
 
 
 
