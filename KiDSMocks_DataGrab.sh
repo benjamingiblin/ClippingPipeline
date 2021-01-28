@@ -21,7 +21,7 @@ if [ "$sqdeg" != "100" ]; then
 fi
 
 SLICS_dataDIR=/data/bengib/Clipping_SimsLvW/SLICS_100/
-cosmoSLICS_dataDIR=/home/jharno/Projects/cosmoSLICS/${cosmol_fname}_${seed}/GalCat/
+cosmoSLICS_DIR=/home/jharno/Projects/cosmoSLICS/${cosmol_fname}_${seed}/GalCat/
 
 
 # If you are doing noise cycle (i.e. with cosmoSLICS)
@@ -57,7 +57,7 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
     fi
 
     # Now use the z keyword to determine if it's KiDS-like or LSST-like cosmoSLICS
-    mocks_datadir=$cosmoSLICS_dataDIR
+    mocks_datadir=$cosmoSLICS_DIR
     if [[ "$z" == *"KiDS"* ]]; then
 	# KiDS-like mocks, but is it KV450 or KiDS1000 like?
 	if [ "$z" == "KiDS1000" ]; then
