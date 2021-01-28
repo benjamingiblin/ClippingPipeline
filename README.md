@@ -33,9 +33,9 @@ Then, follow these steps to install the clipping pipeline. For the purposes of i
 
    mv Clipping_Pipeline/Install_Pipeline .
 
-3. Open Clipping_Pipeline/Install_Pipeline/Install_Pipeline.sh. Comment-out the fail-safe line "exit 0" which prevents the installation script being ran accidentally. Ensure that the Pipeline_DIR variable correctly points to the subdirectory into which you cloned the pipeline. Assuming you named the subdirectory "Clipping_Pipeline" as suggested by step 1., then this line shouldn't need any modification.
+3. Open Install_Pipeline/Install_Pipeline.sh. Comment-out the fail-safe line "exit 0" which prevents the installation script being ran accidentally. Ensure that the Pipeline_DIR variable correctly points to the subdirectory into which you cloned the pipeline. Assuming you named the subdirectory "Clipping_Pipeline" as suggested by step 1., then this line shouldn't need any modification.
 
-4. Change into the clipping pipeline subdirectory (cd Clipping_Pipeline/ ). Run the installation script:
+4. Run the installation script:
 
    Install_Pipeline/Install_Pipeline.sh
 
