@@ -171,6 +171,10 @@ print("Reading in the orig shear values took %.2f seconds" %(t2b - t2a))
 
 
 # Just so interpolation doesn't break... append grids with final rows and columns
+# and move maximum pxl value down 1/100th of a pxl:
+Xm[Xm==Xm.max()] = Xm.max()-0.01
+Ym[Ym==Ym.max()] = Ym.max()-0.01
+
 delta_e1_grid = np.c_[ delta_e1_grid, delta_e1_grid[:,-1] ] 
 delta_e1_grid = np.r_[ delta_e1_grid, [delta_e1_grid[-1,:]] ] 
 

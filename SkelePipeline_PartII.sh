@@ -110,7 +110,7 @@ echo "remove keyword2 is $remove_keyword for $1 $2 $3 $4"
 # Remove stuff that Athena doesn't use
 
 removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword"kappa.fits
-#rm -f $removal
+rm -f $removal
 removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword2".dat
 rm -f $removal
 

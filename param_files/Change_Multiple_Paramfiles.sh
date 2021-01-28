@@ -5,7 +5,7 @@
 ZBcut=("0.1-0.3" "0.3-0.5" "0.5-0.7" "0.7-0.9" "0.9-1.2")
 SN=(0.27 0.258 0.273 0.254 0.27)
 
-SS=1
+SS=9.33
 for i in `seq 0 24`; do       # scroll through cosmologies
     for j in in `seq 0 4`; do
 	
