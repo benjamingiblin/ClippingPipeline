@@ -6,8 +6,8 @@
 #		2. The directory for KiDS masks
 #		3. The directory for SLICS 100 deg^2 mocks (KiDS-like & Generic (LSST-like))
 #		4. The directories for the W3/G9 masks to apply to SLICS 
-#		5. The directory for Mira Titan
-#		6. The directory for the DH10 mocks
+#		5. The directory for Mira Titan (REDUNDANT)
+#		6. The directory for the DH10 mocks (REDUNDANT)
 
 #		7. The executable sky2xy & xy2sky
 #		8. The executable ldactoasc
@@ -16,36 +16,37 @@
 
 echo " An exit statement is in place just after this line, to prevent Install_Pipeline.sh being ran accidentally."
 echo " Comment this out to continue"
-#exit 0
+exit 0
 
 
 # !!! ATTENTION !!!
 # Before running this code to install the pipeline, you need to do the following:
-# 1. move the Install_Pipeline directory upwards one level: mv Install_Pipeline ../
+# 1. move the Install_Pipeline directory upwards one level
 # 2. change the following directories to reflect where your KiDS-450 data, SLICS and Mira Titan mocks are,
 #    if you're running on cuillin, leave these alone.
 
 # If you are running this on cuillin, you'll want to set:
-# data_DIR=/data/<username>/Clipping_SimsLvW/
+# data_DIR=/data/<username>/Clipping_Pipeline/
 # and set pipeline_DIR to the directory you have cloned the repo into.
 
-data_DIR=/data/bengib/Clipping_SimsLvW/
-pipeline_DIR=/home/bengib/Clipping_SimsLvW/
+username=$(whoami)
+data_DIR=/data/$username/Clipping_Pipeline/
+pipeline_DIR=/home/$username/Clipping_Pipeline/
 
 # Define where the data/masks/mocks are if you are saving in pipeline_DIR 
-KiDS_Data_DIR=/home/bengib/KiDS450/
-KiDS_Mask_DIR=/home/bengib/KiDS450/
+KiDS_Data_DIR=/home/$username/KiDS450/
+KiDS_Mask_DIR=/home/$username/KiDS450/
 	
 SLICS_KV450_DIR=/disk10/jharno/MockProducts/KV450/
 SLICS_KiDS1000_DIR=/disk10/jharno/MockProducts/KiDS1000/
 SLICS_Generic_DIR=/disk10/jharno/MockProducts/Generic/
 
-G9_Mask_DIR=/home/bengib/KiDS450/
-W3_Mask_DIR=/home/bengib/WMAP_Masks/
+G9_Mask_DIR=/home/$username/KiDS450/
+W3_Mask_DIR=/home/$username/WMAP_Masks/
 	
-MiraTitan_DIR=/home/bengib/MiraTitan/
+MiraTitan_DIR=/home/$username/MiraTitan/
 
-DH10_DIR=/home/bengib/DH10_Mocks/FaLCoNS/
+DH10_DIR=/home/$username/DH10_Mocks/FaLCoNS/
 
 # Define where data/masks/mocks are if you are saving in data_DIR 
 KiDS_Data_dataDIR=$data_DIR/KiDS450/

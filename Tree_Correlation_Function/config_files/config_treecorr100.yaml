@@ -1,0 +1,19 @@
+#Configuration file for TreeCorr test
+#Input Parameters
+file_name: '/data/bengib/Clipping_SimsLvW//Correlation_Function/MRres60arcs_100Sqdeg_SN0.273_NoMask_KiDS1000GpAM_zKiDS1000_ZBcut0.5-0.7/SN0.273_test.KiDS1000GpAM.LOS100.SS9.33.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc'
+ra_col: 1
+dec_col: 2
+ra_units: 'degrees'
+dec_units: 'degrees'
+g1_col: 3
+g2_col: 4
+w_col: 5
+metric: 'Euclidean'
+flip_g2: True
+bin_slop: 0.14069249601113362
+#Output Parameters
+min_sep: 0.5
+max_sep: 300.0
+nbins: 9
+sep_units: 'arcmin'
+gg_file_name: '/data/bengib/Clipping_SimsLvW//Tree_Correlation_Function/MRres60arcs_100Sqdeg_SN0.273_NoMask_KiDS1000GpAM_zKiDS1000_ZBcut0.5-0.7/ThBins9/SN0.273_test.KiDS1000GpAM.LOS100.SS9.33.rCLIP_X3sigma.CorrFun.asc'

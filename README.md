@@ -16,22 +16,46 @@ This series of codes start from shear catalogues perform the following, either w
  * The unclipped shear catalogue is also fed to TreeCorr to calculate the conventional, "unclipped" shear correlation functions.
 
 
-## General line used to execute the pipeline:
-
-For simulations
-./Master_CorrFun_ByParts.sh Sims_Run param_files/<input parameter file> <los_start> <los_end>
-where one simply needs to designate the input parameter file, and the line of sight numbers (IDs of the simulation catalogues) to start and end the clipping on.
-
-Note that on the supercomputer cuillin,	you will be having cuillin run the pipeline on its various workhorse computers (hereafter, referred to simply as "workers"). This means you will be changing that line above in the Launch.sh script (explained in the next section), and running it repeatedly.
-
 
 ## Installation
 
 For this pipeline to work, you need to have already installed an anaconda python distribution from, e.g., https://docs.anaconda.com/anaconda/install/
 
-Then, follow these steps to install:
+You also need to have the treecorr package (https://github.com/rmjarvis/TreeCorr). Once anaconda is installed, TreeCorr should be easy to install too, with: pip install treecorr
+
+Then, follow these steps to install the clipping pipeline. For the purposes of illustration, these instructions describe how to install in your home directory on cuillin, although the pipeline could happily be installed elsewhere on this machine.
+
+    1. Navigate to your home directory (/home/<username>/), then git clone the pipeline:
+git clone https://github.com/benjamingiblin/ClippingPipeline.git Clipping_Pipeline
+
+    2. Move the Install_Pipeline subdirectory upwards into the home directory: mv Clipping_Pipeline/Install_Pipeline .
+
+    3. Open Clipping_Pipeline/Install_Pipeline/Install_Pipeline.sh. Comment-out the fail-safe line "exit 0" which prevents the installation script being ran accidentally. Ensure that the Pipeline_DIR variable correctly points to the subdirectory into which you cloned the pipeline. Assuming you named the subdirectory "Clipping_Pipeline" as suggested by step 1., then this line shouldn't need any modification.
+
+    4. Change into the clipping pipeline subdirectory (cd Clipping_Pipeline/ ). Run the installation script (Install_Pipeline/Install_Pipeline.sh). It is recommended you remove the commenting on the "exit 0" line in the installation script after this is done, to prevent it being ran accidentally.
 
 
+The pipeline should now be correctly configured for the user. 
+
+
+
+
+## General line used to execute the pipeline:
+
+For simulations:
+
+./Master_CorrFun_ByParts.sh Sims_Run param_files/<input_parameter_file> <los_start> <los_end>
+
+where one simply needs to designate the input parameter file, and the line of sight numbers (IDs of the simulation catalogues) to start and end the clipping on.
+
+
+Note that the pipeline is designed to run on the workhorse processors (hereafter referred to as "workers") of the cuillin supercomputer at the ROE. This means that the pipeline will not run successfully if executed on the cuillin head node. Running the pipeline needs to be designated to the workers using the launch script via:
+
+sbatch Launch.sh
+
+In order to run different pipeline settings, one simply needs to change the <input_parameter_file>, <los_start> and <los_end> variables in the Launch.sh script.
+
+If you want to quickly check the pipeline runs successfully without launching a job, waiting for it to be allocated to a worker and finishing running, you can execute directly on the cuillin worker manually. To do this, ssh into a worker (with, e.g., ssh worker019), navigate into the Clipping_Pipeline directory and run the line to execute the pipeline there. NOTE: you should only do this for 1-3 lines of sight in total, which will only take a few minutes to run. Taking up processing power and memory  on a worker for long durations without using the launch script is in general bad practice.
 
 
 
@@ -45,7 +69,7 @@ This script "launches" the clipping pipeline on cuillin. This means that the scr
 
 *(1) Master_CorrFun_ByParts.sh*
 
- * Executed as ./Master_CorrFun_ByParts.sh Sims_Run param_files/<input parameter file> <los_start> <los_end>
+ * Executed as ./Master_CorrFun_ByParts.sh Sims_Run param_files/<input_parameter_file> <los_start> <los_end>
  * (note this will only work on a cuillin worker, not on the head node itself).
 
 The master bash script that runs the whole pipeline. It takes an input parameter file which specifies the details of the calculation (more on this below). The master script first of all executes scripts which find the relevant input shear catalogues specified by the parameter file, sets up temporary directories on the cuillin workers to save outputs to, and copies some files over to the cuillin worker. It then starts running the pipeline.

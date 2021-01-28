@@ -13,7 +13,19 @@ from subprocess import call
 import glob
 from os import getcwd
 from matplotlib import rc
+from matplotlib import rcParams
 from scipy.interpolate import interp1d
+
+# Some font setting
+rcParams['ps.useafm'] = True
+rcParams['pdf.use14corefonts'] = True
+
+font = {'family' : 'serif',
+        'weight' : 'normal',
+        'size'   : 14}
+
+plt.rc('font', **font)
+plt.rcParams["mathtext.fontset"] = "cm"
 
 pipeline_DIR='/home/bengib/Clipping_SimsLvW/' # Where the codes of the pipeline reside
 data_DIR='/home/bengib/Clipping_SimsLvW/' # Where the outputfiles and data are saved mid-computation
@@ -28,13 +40,6 @@ variable = Filter_Input(sys.argv)
 variable.Filter()
 RUN = sys.argv[1]
 
-
-
-
-rc('text',usetex=True)
-rc('font',size=18)
-rc('legend',**{'fontsize':18})
-rc('font',**{'family':'serif','serif':['Computer Modern']})
 
 
 
@@ -322,88 +327,7 @@ else:
 
 
 ZBcut = DIRname.split('ZBcut')[-1].split('_')[0]
-# For Mira Titan read in previously saved errors from JHD's mocks 
-if z == 'MiraTitan_DELETE_THIS_SUFFIX':
-	# read in previously saved errors from JHD's mocks
-	JHDerrors_startname = '%s/Tree_Correlation_Function/100Sqdeg_SN0.28_NoMask_3.32GpAM_zKiDS_ZBcut%s/ThBins%s/NLOS114/SN0.28_test.3.32GpAM.NLOS114' %(pipeline_DIR, ZBcut,ThBins)
-
-	AR = 100./(0.5*np.pi*(180./np.pi)**2.) # the ratio of masked SLICS area to Mira Titan area
-												 # QUESTION: Should the factor of 114 be in there?
-												 # we never used it when getting KiDS errors....
-	errCFp_uc = np.loadtxt('%s.AverageCF+.asc'%(JHDerrors_startname), usecols=(2,), unpack=True)*np.sqrt(AR)
-	errCFm_uc = np.loadtxt('%s.AverageCF-.asc'%(JHDerrors_startname), usecols=(2,), unpack=True)*np.sqrt(AR)
-
-	# GIBLIN: bear in mind errors should change with SS. But as of yet, no way to convert Mira Titan SS to other mocks. 
-	errCFp_c = np.loadtxt('%s.SS112.rCLIP_%ssigma.AverageCF+.asc'%(JHDerrors_startname,sigma), usecols=(2,), unpack=True)*np.sqrt(AR)
-	errCFm_c = np.loadtxt('%s.SS112.rCLIP_%ssigma.AverageCF-.asc'%(JHDerrors_startname,sigma), usecols=(2,), unpack=True)*np.sqrt(AR)
-
-	temp = np.load('%s.SS112.rCLIP_%ssigma.CxUC+.CovMat.npy'%(JHDerrors_startname,sigma))
-	errCFp_cuc = temp.diagonal()*AR
-
-	temp = np.load('%s.SS112.rCLIP_%ssigma.CxUC-.CovMat.npy'%(JHDerrors_startname,sigma))
-	errCFm_cuc = temp.diagonal()*AR
-	skiprow_no=13 # skip this many rows when reading in theory
-else:
-	skiprow_no=13
-	#skiprow_no=0
-
-
-
-
-
-# Read in the theory CFs
-print('Reading in theory curve xi_*_smith03revised_z%s_ZBcut%s' %(z,ZBcut))
-if RUN == 'Sims_Run':
-	if sqdeg == 36:
-		DH10_dir='/home/bengib/DH10_Mocks/FaLCoNS/'
-		indir = '%s/Nicaea_Unclipped_Predictions/Nicaea_Bins/' %DH10_dir
-		theta_theory, CFp_theory = np.loadtxt('%s/xi_p_smith03revised_z%s_ZBcut%s' %(indir,z,ZBcut), usecols=(0,1), unpack=True, skiprows=skiprow_no)
-		theta_theory, CFm_theory = np.loadtxt('%s/xi_m_smith03revised_z%s_ZBcut%s' %(indir,z,ZBcut), usecols=(0,1), unpack=True, skiprows=skiprow_no)
-		if 'NOISE' not in DIRname:
-			# Get fudge factor to correct for xi falling off at high theta.
-			interp_theory_fun = interp1d(theta_theory, CFp_theory, kind='linear')
-			CFp_theory_discrete = interp_theory_fun(theta)
-			Fudge_p = CFp_theory_discrete - CFp_uc
-			# add fudge factor to clipped & unclipped
-			CFp_uc_NoFF = np.copy(CFp_uc)
-			CFp_c_NoFF = np.copy(CFp_c)
-			CFp_uc += Fudge_p
-			CFp_c += Fudge_p
-
-			interp_theory_fun = interp1d(theta_theory, CFm_theory, kind='linear')
-			CFm_theory_discrete = interp_theory_fun(theta)
-			Fudge_m = CFm_theory_discrete - CFm_uc
-			# add fudge factor to clipped & unclipped 
-			CFm_uc_NoFF = np.copy(CFm_uc)
-			CFm_c_NoFF = np.copy(CFm_c)
-			CFm_uc += Fudge_m
-			CFm_c += Fudge_m
-
-			np.savetxt('%s.AverageCF+.NoFF.asc'%(combined_name), np.c_[theta, CFp_uc_NoFF, errCFp_uc], header = 'theta/arcmin mean(xi_p) std(xi_p)', comments='#')
-			np.savetxt('%s.AverageCF-.NoFF.asc'%(combined_name), np.c_[theta, CFm_uc_NoFF, errCFm_uc], header = 'theta/arcmin mean(xi_m) std(xi_m)', comments='#')
-	
-			np.savetxt('%s.SS%s.rCLIP_%ssigma.AverageCF+.NoFF.asc'%(combined_name,SS,sigma), np.c_[theta, CFp_c_NoFF, errCFp_c], header = 'theta/arcmin mean(xi_p) std(xi_p)', comments='#')
-			np.savetxt('%s.SS%s.rCLIP_%ssigma.AverageCF-.NoFF.asc'%(combined_name,SS,sigma), np.c_[theta, CFm_c_NoFF, errCFm_c], header = 'theta/arcmin mean(xi_m) std(xi_m)', comments='#')
-
-			# Save fudge factors too
-			np.savetxt('%s.FudgeFactors.asc'%(combined_name), np.c_[Fudge_p,Fudge_m], header = 'xi+ xi-', comments='#')
-			#print("Fudge factors are %s and %s" %(Fudge_p, Fudge_m))
-
-	#else:
-	#	theta_theory, CFp_theory = np.loadtxt('%s/Correlation_Function/Nicaea_CFs_ByGiblin/xi_p_smith03revised_z%s_ZBcut%s' %(pipeline_DIR,z,ZBcut), usecols=(0,1), unpack=True, skiprows=skiprow_no)
-	#	theta_theory, CFm_theory = np.loadtxt('%s/Correlation_Function/Nicaea_CFs_ByGiblin/xi_m_smith03revised_z%s_ZBcut%s' %(pipeline_DIR,z,ZBcut), usecols=(0,1), unpack=True, skiprows=skiprow_no)
-else:
-	theta_theory, CFp_theory = np.loadtxt('%s/Correlation_Function/Nicaea_CFs_ByGiblin/xi_p_smith03revised_z%s_ZBcut%s' %(pipeline_DIR,z,ZBcut), usecols=(0,1), unpack=True, skiprows=skiprow_no)
-	theta_theory, CFm_theory = np.loadtxt('%s/Correlation_Function/Nicaea_CFs_ByGiblin/xi_m_smith03revised_z%s_ZBcut%s' %(pipeline_DIR,z,ZBcut), usecols=(0,1), unpack=True, skiprows=skiprow_no)
-
-
-
-
-
-
-
 # Save the average CFs: clipped/unclipped xi+/xi-
-
 np.savetxt('%s.SS%s.rCLIP_%ssigma.AverageCF+.asc'%(combined_name,SS,sigma), np.c_[theta, CFp_c, errCFp_c], header = 'theta/arcmin mean(xi_p) std(xi_p)', comments='#')
 np.savetxt('%s.SS%s.rCLIP_%ssigma.AverageCF-.asc'%(combined_name,SS,sigma), np.c_[theta, CFm_c, errCFm_c], header = 'theta/arcmin mean(xi_m) std(xi_m)', comments='#')
 
@@ -435,40 +359,13 @@ legend_array = ['Clipped', 'Unclipped']
 colour_array = ['magenta', 'darkblue']
 
 
-
 # The plotting bit
-#Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, theta_theory, CFp_theory, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
-#Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, theta_theory, CFm_theory, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
+#Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
+#Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
 
-# Plot the NoFF results too
-if RUN == 'Sims_Run':
-	if sqdeg == 36:
-		# Plotting without the fudge factor
-		stack_CFp_NoFF = np.stack((CFp_c_NoFF, CFp_uc_NoFF))
-		stack_CFm_NoFF = np.stack((CFm_c_NoFF, CFm_uc_NoFF))
-		#Clip_Class.Plot_CFs(stack_theta, stack_CFp_NoFF, stack_errCFp, legend_array, colour_array, theta_theory, CFp_theory, '%s.SS%s.rCLIP_%ssigma.NoFF'%(combined_name,SS,sigma), '+')
-		#Clip_Class.Plot_CFs(stack_theta, stack_CFm_NoFF, stack_errCFm, legend_array, colour_array, theta_theory, CFm_theory, '%s.SS%s.rCLIP_%ssigma.NoFF'%(combined_name,SS,sigma), '-')
-
-
-
-
-# Plot the ratio (requires numertaor CFs to be stacked. Even if there is only one).
-# plot ratio of theory to unclipped too.
-#interp_theory_fun = interp1d(theta_theory, CFp_theory, kind='linear')
-#CFp_theory_discrete = interp_theory_fun(theta)
-
-#interp_theory_fun = interp1d(theta_theory, CFm_theory, kind='linear')
-#CFm_theory_discrete = interp_theory_fun(theta)
-
-# Redefine legend_array for plotting:
-#legend_array = [r'$\kappa^c$, SS$=$6.6 arcmin']
-legend_array = ['Clipped', r'Takahashi$+12$']
-#stack_CFp = np.stack((CFp_c, CFp_theory_discrete))
 stack_errCFp = np.stack((errCFp_c, np.zeros(len(theta)) ))
 stack_errCFp_cuc = np.stack((errCFp_cuc, np.zeros(len(theta)) ))
 
-
-#stack_CFm = np.stack((CFm_c, CFm_theory_discrete))
 stack_errCFm = np.stack((errCFm_c, np.zeros(len(theta)) ))
 stack_errCFm_cuc = np.stack((errCFm_cuc, np.zeros(len(theta)) ))
 
@@ -480,7 +377,7 @@ stack_errCFm_cuc = np.stack((errCFm_cuc, np.zeros(len(theta)) ))
 
 # Calc the averaged clipped pxl frac and save the result.
 Clip_Class.Calc_Clip_Frac(frac_files, '%s.SS%s.rCLIP_%ssigma.AvClipFrac.txt'%(combined_name,SS,sigma))
-Clip_Class.Calc_Clip_Frac(vol_files, '%s.SS%s.rCLIP_%ssigma.AvClipVol.txt'%(combined_name,SS,sigma))
+#Clip_Class.Calc_Clip_Frac(vol_files, '%s.SS%s.rCLIP_%ssigma.AvClipVol.txt'%(combined_name,SS,sigma))
 
 
 

@@ -57,8 +57,14 @@ else:
 
 
 # Make the X-correlation output directory
-ZBcut2 = DIRname2.split('ZBcut')[-1]
-DIRname = '%s_X_ZBcut%s' %(DIRname1, ZBcut2)
+if '_Cosmol' in DIRname1:
+        ZBcut1 = DIRname1.split('ZBcut')[-1].split('_Cosmol')[0]
+        ZBcut2 = DIRname2.split('ZBcut')[-1].split('_Cosmol')[0]
+else:
+        ZBcut1 = DIRname1.split('ZBcut')[-1]
+        ZBcut2 = DIRname2.split('ZBcut')[-1]
+
+DIRname = DIRname1.replace('ZBcut%s'%ZBcut1, 'ZBcut%s_X_ZBcut%s'%(ZBcut1, ZBcut2), 1)
 if os.path.isdir('%s/Tree_Correlation_Function/%s/ThBins%s'%(overall_DIR, DIRname,ThBins)) is False:
 	call(['mkdir','-p', '%s/Tree_Correlation_Function/%s/ThBins%s'%(overall_DIR, DIRname,ThBins)])
 
