@@ -25,7 +25,7 @@ You also need to have the treecorr package (https://github.com/rmjarvis/TreeCorr
 
 Then, follow these steps to install the clipping pipeline. For the purposes of illustration, these instructions describe how to install in your home directory on cuillin, although the pipeline could happily be installed elsewhere on this machine.
 
-1. Navigate to your home directory (/home/<username>/), then git clone the pipeline:
+1. Navigate to your home directory (/home/<username>), then git clone the pipeline:
 
    git clone https://github.com/benjamingiblin/ClippingPipeline.git Clipping_Pipeline
 
