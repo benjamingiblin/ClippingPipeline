@@ -52,7 +52,7 @@ DH10_DIR=/home/$username/DH10_Mocks/FaLCoNS/
 KiDS_Data_dataDIR=$data_DIR/KiDS450/
 KiDS_Mask_dataDIR=$data_DIR/KiDS450/
 
-SLICS_KiDS_dataDIR=$data_DIR/SLICS_100/
+SLICS_dataDIR=$data_DIR/SLICS_100/
 
 G9_Mask_dataDIR=$data_DIR/KiDS450/
 W3_Mask_dataDIR=$data_DIR/WMAP_Masks/
@@ -103,7 +103,7 @@ find $pipeline_DIR -type f -exec sed -i "s#kids450_datadir=.*#kids450_datadir=\'
 find $pipeline_DIR -type f -exec sed -i "s#kids450mask_datadir=.*#kids450mask_datadir=\'$KiDS_Mask_dataDIR\'#" {} +
 
 # SLICS
-find $pipeline_DIR -type f -exec sed -i "s#mocks_datadir=.*#mocks_datadir=\'$SLICS_KiDS_dataDIR\'#" {} +
+find $pipeline_DIR -type f -exec sed -i "s#SLICS_dataDIR=.*#SLICS_dataDIR=\'$SLICS_dataDIR\'#" {} +
 
 # Masks to apply to SLICS
 find $pipeline_DIR -type f -exec sed -i "s#G9mask_datadir=.*#G9mask_datadir=\'$G9_Mask_dataDIR\'#" {} +

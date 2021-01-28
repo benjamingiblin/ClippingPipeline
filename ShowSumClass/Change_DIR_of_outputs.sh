@@ -60,8 +60,7 @@ DH10_DIR=/home/bengib/DH10_Mocks/FaLCoNS/
 KiDS_Data_dataDIR=$data_DIR/KiDS450/
 KiDS_Mask_dataDIR=$data_DIR/KiDS450/
 
-SLICS_KiDS_dataDIR=$data_DIR/SLICS_100/
-SLICS_Generic_dataDIR=$data_DIR/SLICS_100/
+SLICS_dataDIR=$data_DIR/SLICS_100/
 cosmoSLICS_dataDIR=$data_DIR/cosmoSLICS/
 
 G9_Mask_dataDIR=$data_DIR/KiDS450/
@@ -135,8 +134,8 @@ if [ "$RUN" == "Sims_Run" ]; then
 		    fi
 		    tmp_cosmoSLICS_dataDIR=$cosmoSLICS_dataDIR/${cosmol_fname}_${seed}/GalCat/KV450/GalCat/
 		    tmp_cosmoSLICS_DIR=$cosmoSLICS_DIR/${cosmol_fname}_${seed}/GalCat/KV450/GalCat/
-		    if [ ! -d "$tmp_cosmoSLICS_dataDIR" ]; then mkdir -p $tmp_cosmoSLICS_dataDIR; fi
-		    # note this line isn't necessary - access cosmoSLICS cats directly in KiDSMocks_DataGrab.sh
+		    # note these lines aren't necessary - access cosmoSLICS cats directly in KiDSMocks_DataGrab.sh  
+		    #if [ ! -d "$tmp_cosmoSLICS_dataDIR" ]; then mkdir -p $tmp_cosmoSLICS_dataDIR; fi
 		    #rsync -avz $tmp_cosmoSLICS_DIR/GalCatalog_LOS_cone${los_fname}.fits $tmp_cosmoSLICS_dataDIR/ 
 		done
 		
@@ -160,15 +159,15 @@ if [ "$RUN" == "Sims_Run" ]; then
 		    fi
 		    
 		  		 
-		    if [ ! -d "$SLICS_KiDS_dataDIR" ]; then mkdir -p $SLICS_KiDS_dataDIR; fi
+		    if [ ! -d "$SLICS_dataDIR" ]; then mkdir -p $SLICS_dataDIR; fi
 		    # rsync necessary los
-		    for l in ${Loop_Array[*]}; do rsync -avz $SLICS_KiDS_DIR/GalCatalog_${fname_tag}_LOS$l.fits $SLICS_KiDS_dataDIR/GalCatalog_LOS$l.fits ; done
+		    for l in ${Loop_Array[*]}; do rsync -avz $SLICS_KiDS_DIR/GalCatalog_${fname_tag}_LOS$l.fits $SLICS_dataDIR/GalCatalog_LOS$l.fits ; done
 
 		elif [[ "$z" == *"LSST"* ]]; then
 		    # It's Generic (LSST-like) SLICS
-		    if [ ! -d "$SLICS_Generic_dataDIR" ]; then mkdir -p $SLICS_Generic_dataDIR; fi
+		    if [ ! -d "$SLICS_dataDIR" ]; then mkdir -p $SLICS_dataDIR; fi
 		    # rsync necessary los
-                    for l in ${Loop_Array[*]}; do rsync -avz $SLICS_Generic_DIR/GalCatalog_LOS$l.fits $SLICS_Generic_dataDIR/ ; done
+                    for l in ${Loop_Array[*]}; do rsync -avz $SLICS_Generic_DIR/GalCatalog_LOS$l.fits $SLICS_dataDIR/ ; done
 		fi
 		
 		    

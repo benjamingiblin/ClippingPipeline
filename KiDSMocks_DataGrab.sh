@@ -20,6 +20,10 @@ if [ "$sqdeg" != "100" ]; then
 	exit 1
 fi
 
+SLICS_dataDIR=/data/bengib/Clipping_SimsLvW/SLICS_100/
+cosmoSLICS_dataDIR=/home/jharno/Projects/cosmoSLICS/${cosmol_fname}_${seed}/GalCat/
+
+
 # If you are doing noise cycle (i.e. with cosmoSLICS)
 # strip "0n0" to just be "0" and save as new LOS variable name
 # to be used ONLY when reading in with ldac
@@ -53,7 +57,7 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
     fi
 
     # Now use the z keyword to determine if it's KiDS-like or LSST-like cosmoSLICS
-    mocks_datadir=/home/jharno/Projects/cosmoSLICS/${cosmol_fname}_${seed}/GalCat/
+    mocks_datadir=$cosmoSLICS_dataDIR
     if [[ "$z" == *"KiDS"* ]]; then
 	# KiDS-like mocks, but is it KV450 or KiDS1000 like?
 	if [ "$z" == "KiDS1000" ]; then
@@ -92,7 +96,7 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 else
     # 'Cosmol' is not part of name: it's a SLICS run...
     # But which SLICS? KiDS-like (KiDS1000 or KV450) or LSST-like?
-    mocks_datadir='/data/bengib/Clipping_SimsLvW//SLICS_100/'
+    mocks_datadir=$SLICS_dataDIR
     
     input=$mocks_datadir/GalCatalog_LOS"$los".fits
     # The Table name and redshift keywords differ between KiDS-like (KV450 & KiDS1000) & Generic (LSST-like)
