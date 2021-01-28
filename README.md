@@ -58,9 +58,9 @@ where one simply needs to designate the input parameter file, and the line of si
 
 Note that the pipeline is designed to run on the workhorse processors (hereafter referred to as "workers") of the cuillin supercomputer at the ROE. This means that the pipeline will not run successfully if executed on the cuillin head node. Running the pipeline needs to be designated to the workers using the launch script via:
 
-sbatch Launch.sh
+sbatch Launch_Pipeline.sh
 
-In order to run different pipeline settings, one simply needs to change the <input_parameter_file>, <los_start> and <los_end> variables in the Launch.sh script.
+In order to run different pipeline settings, one simply needs to change the <input_parameter_file>, <los_start> and <los_end> variables in the Launch_Pipeline.sh script.
 
 If you want to quickly check the pipeline runs successfully without launching a job, waiting for it to be allocated to a worker and finishing running, you can execute directly on the cuillin worker manually. To do this, ssh into a worker (with, e.g., ssh worker019), navigate into the Clipping_Pipeline directory and run the line to execute the pipeline there. NOTE: you should only do this for 1-3 lines of sight in total, which will only take a few minutes to run. Taking up processing power and memory  on a worker for long durations without using the launch script is in general bad practice.
 
@@ -68,9 +68,9 @@ If you want to quickly check the pipeline runs successfully without launching a 
 
 ## The most important codes at a glance
 
-*(0) Launch.sh*
+*(0) Launch_Pipeline.sh*
 
- * Executed as: sbatch Launch.sh 
+ * Executed as: sbatch Launch_Pipeline.sh 
 
 This script "launches" the clipping pipeline on cuillin. This means that the script asks for the clipping pipeline job to be put in the queue to run on one of the cuillin workers. I have set the memory request of the launch script low enough so that the clipping pipeline will get to the front of the queue quickly, but not so low that the job fails. 
 
