@@ -25,14 +25,21 @@ You also need to have the treecorr package (https://github.com/rmjarvis/TreeCorr
 
 Then, follow these steps to install the clipping pipeline. For the purposes of illustration, these instructions describe how to install in your home directory on cuillin, although the pipeline could happily be installed elsewhere on this machine.
 
-    1. Navigate to your home directory (/home/<username>/), then git clone the pipeline:
-git clone https://github.com/benjamingiblin/ClippingPipeline.git Clipping_Pipeline
+1. Navigate to your home directory (/home/<username>/), then git clone the pipeline:
 
-    2. Move the Install_Pipeline subdirectory upwards into the home directory: mv Clipping_Pipeline/Install_Pipeline .
+   git clone https://github.com/benjamingiblin/ClippingPipeline.git Clipping_Pipeline
 
-    3. Open Clipping_Pipeline/Install_Pipeline/Install_Pipeline.sh. Comment-out the fail-safe line "exit 0" which prevents the installation script being ran accidentally. Ensure that the Pipeline_DIR variable correctly points to the subdirectory into which you cloned the pipeline. Assuming you named the subdirectory "Clipping_Pipeline" as suggested by step 1., then this line shouldn't need any modification.
+2. Move the Install_Pipeline subdirectory upwards into the home directory:
 
-    4. Change into the clipping pipeline subdirectory (cd Clipping_Pipeline/ ). Run the installation script (Install_Pipeline/Install_Pipeline.sh). It is recommended you remove the commenting on the "exit 0" line in the installation script after this is done, to prevent it being ran accidentally.
+   mv Clipping_Pipeline/Install_Pipeline .
+
+3. Open Clipping_Pipeline/Install_Pipeline/Install_Pipeline.sh. Comment-out the fail-safe line "exit 0" which prevents the installation script being ran accidentally. Ensure that the Pipeline_DIR variable correctly points to the subdirectory into which you cloned the pipeline. Assuming you named the subdirectory "Clipping_Pipeline" as suggested by step 1., then this line shouldn't need any modification.
+
+4. Change into the clipping pipeline subdirectory (cd Clipping_Pipeline/ ). Run the installation script:
+
+   Install_Pipeline/Install_Pipeline.sh
+
+It is recommended you remove the commenting on the "exit 0" line in the installation script after this is done, to prevent it being ran accidentally.
 
 
 The pipeline should now be correctly configured for the user. 
