@@ -68,30 +68,30 @@ If you want to quickly check the pipeline runs successfully without launching a 
 
 ## The input parameter file
 
-These are stored in the param_files/ subdirectory. Here is the contents of a parameter file for clipping the cosmoSLICS simulations which have been tailored to match the KiDS1000 data set. The parameters in bold are the important ones which the user may wish to change.
+These are stored in the param_files/ subdirectory. Here is the contents of a parameter file for clipping the cosmoSLICS simulations which have been tailored to match the KiDS1000 data set. The most important parameters which the user may want to change are commented on below.
 
-      KiDS1000			# number of gals/arcmin^2 (KiDS1000 means set equal to the KiDS1000 data)
-      **9.33** 			# Smoothing scale [pxls] x sqrt(2) 
-      **X3** 			# The clip threshold (see Clipping_K/Clip_Thresholds)
-      **0.27** 			# The intrinsic ellipticity of galaxies, to be added if running on simulations.
+     KiDS1000			# number of gals/arcmin^2 (KiDS1000 means set equal to the KiDS1000 data)
+     9.33 			# Smoothing scale [pxls] x sqrt(2) 
+     X3 			# The clip threshold (see Clipping_K/Clip_Thresholds)
+     0.27 			# The intrinsic ellipticity of galaxies, to be added if running on simulations.
      nomask			# Whether masking is to be included or omitted.
      KiDS1000 			# The n(z) of the galaxies in the data (KiDS1000 means set to the SOM-GOLD KiS1000 n(z) )
      0.00129115558		# Pixel scale of the mocks (deg/pxl0 - REDUNDANT.
      100			# Angular size of the mocks [deg^2]
      None			# Cosmology ID. For cosmoSLICS [fid,0-24]. For SLICS, put None.
-     **0.1**			# zlow: lower limit on zB cut. For no zB cut, put anything that isn't a number
-     **0.3**			# zhigh: upper limit on zB cut. For no zB cut, put anything that isn't a number	
+     0.1			# zlow: lower limit on zB cut. For no zB cut, put anything that isn't a number
+     0.3			# zhigh: upper limit on zB cut. For no zB cut, put anything that isn't a number	
      9				# The number of theta bins to calculate the xi_+/- in [uses log-spaced bins 0.5-300arcmin]
      60arcs		        # Resolution of the kappa maps: 60arcs = 60 arcsecons per pxl. 
      0.02			# OATH value previously used in Athena [Redundant]. 
 
 
-**Notes on these variables**
+**The most important parameters**
 
-	- **9.33** is the smoothing scale (SS) x sqrt(2) and given in units of pixels. The SS controls how much the maps are smoothed in mass reconstruction (specifically it is the standard deviation of the Gaussian smoothing filter). To convert the value in the param-file to an angular smoothing scale, use the resolution of the map set in the penultimate row. Here the resolution is 60 arcseconds/pxl, so **SS*sqrt(2)=9.33 corresponds to 396 arcsec = 6.6 arcmin**.
-	- **X3** designates the clipping threshold. This tells the pipeline to read the convergence value saved in the file: Clipping_K/Clip_Thresholds/X3_Threshold (which is 0.01). Other thresholds (X0-X4) can be found in this subdirectory, and the user is free to create new threshold files and use those.
-	- **0.27** is the standard deviation of the Gaussian shape noise (SN) added to the shear values in simulations. For no shape noise, this should be set to 0.
-	- **0.1** and **0.3**: These are the lower and upper redshift cuts to make on the data. Working with KiDS1000-like simulations, these numbers should always be (0.1-0.3, 0.3-0.5, 0.5-0.7, 0.7-0.9, 0.9-1.2). Note that the SN value is different for these 5 redshift bins: (0.27, 0.258, 0.273, 0.254, 0.27)
+	- ROW 2: 9.33 is the smoothing scale (SS) x sqrt(2) and given in units of pixels. The SS controls how much the maps are smoothed in mass reconstruction (specifically it is the standard deviation of the Gaussian smoothing filter). To convert the value in the param-file to an angular smoothing scale, use the resolution of the map set in the penultimate row. Here the resolution is 60 arcseconds/pxl, so SS*sqrt(2)=9.33 corresponds to 396 arcsec = 6.6 arcmin.
+	- ROW 3: X3 designates the clipping threshold. This tells the pipeline to read the convergence value saved in the file: Clipping_K/Clip_Thresholds/X3_Threshold (which is 0.01). Other thresholds (X0-X4) can be found in this subdirectory, and the user is free to create new threshold files and use those.
+	- ROW 4: 0.27 is the standard deviation of the Gaussian shape noise (SN) added to the shear values in simulations. For no shape noise, this should be set to 0.
+	- ROWS 10 AND 11: 0.1 and 0.3: These are the lower and upper redshift cuts to make on the data. Working with KiDS1000-like simulations, these numbers should always be (0.1-0.3, 0.3-0.5, 0.5-0.7, 0.7-0.9, 0.9-1.2). Note that the SN value is different for these 5 redshift bins: (0.27, 0.258, 0.273, 0.254, 0.27)
 
 
 
