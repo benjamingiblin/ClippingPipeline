@@ -42,7 +42,7 @@ SLICS_KiDS1000_DIR=/disk10/jharno/MockProducts/KiDS1000/
 SLICS_Generic_DIR=/disk10/jharno/MockProducts/Generic/
 
 G9_Mask_DIR=/home/$username/KiDS450/
-W3_Mask_DIR=/home/$username/WMAP_Masks/
+W3_Mask_DIR=/home/bengib/WMAP_Masks/ # Leave this pointing to Ben's directory
 	
 MiraTitan_DIR=/home/$username/MiraTitan/
 

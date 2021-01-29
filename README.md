@@ -2,7 +2,7 @@
 
 # The Clipping Pipeline
 
-The following is a README document for the clipping pipeline employed in Giblin et al. (2020) - https://arxiv.org/abs/1805.12084
+The following is a README document for the clipping pipeline employed in Giblin et al. (2018) - https://arxiv.org/abs/1805.12084
 
 This series of codes start from shear catalogues perform the following, either with simulations or real data:
 
@@ -47,9 +47,9 @@ The pipeline should now be correctly configured for the user.
 
 
 
-## General line used to execute the pipeline:
+## Executing the pipeline
 
-For simulations:
+The command to run the pipeline is:
 
 ./Master_CorrFun_ByParts.sh Sims_Run param_files/<input_parameter_file> <los_start> <los_end>
 
@@ -63,6 +63,37 @@ sbatch Launch_Pipeline.sh
 In order to run different pipeline settings, one simply needs to change the <input_parameter_file>, <los_start> and <los_end> variables in the Launch_Pipeline.sh script.
 
 If you want to quickly check the pipeline runs successfully without launching a job, waiting for it to be allocated to a worker and finishing running, you can execute directly on the cuillin worker manually. To do this, ssh into a worker (with, e.g., ssh worker019), navigate into the Clipping_Pipeline directory and run the line to execute the pipeline there. NOTE: you should only do this for 1-3 lines of sight in total, which will only take a few minutes to run. Taking up processing power and memory  on a worker for long durations without using the launch script is in general bad practice.
+
+
+
+## The input parameter file
+
+These are stored in the param_files/ subdirectory. Here is the contents of a parameter file for clipping the cosmoSLICS simulations which have been tailored to match the KiDS1000 data set. The parameters in bold are the important ones which the user may wish to change.
+
+      KiDS1000			# number of gals/arcmin^2 (KiDS1000 means set equal to the KiDS1000 data)
+      **9.33** 			# Smoothing scale [pxls] x sqrt(2) 
+      **X3** 			# The clip threshold (see Clipping_K/Clip_Thresholds)
+      **0.27** 			# The intrinsic ellipticity of galaxies, to be added if running on simulations.
+     nomask			# Whether masking is to be included or omitted.
+     KiDS1000 			# The n(z) of the galaxies in the data (KiDS1000 means set to the SOM-GOLD KiS1000 n(z) )
+     0.00129115558		# Pixel scale of the mocks (deg/pxl0 - REDUNDANT.
+     100			# Angular size of the mocks [deg^2]
+     None			# Cosmology ID. For cosmoSLICS [fid,0-24]. For SLICS, put None.
+     **0.1**			# zlow: lower limit on zB cut. For no zB cut, put anything that isn't a number
+     **0.3**			# zhigh: upper limit on zB cut. For no zB cut, put anything that isn't a number	
+     9				# The number of theta bins to calculate the xi_+/- in [uses log-spaced bins 0.5-300arcmin]
+     60arcs		        # Resolution of the kappa maps: 60arcs = 60 arcsecons per pxl. 
+     0.02			# OATH value previously used in Athena [Redundant]. 
+
+
+**Notes on these variables**
+
+	- **9.33** is the smoothing scale (SS) x sqrt(2) and given in units of pixels. The SS controls how much the maps are smoothed in mass reconstruction (specifically it is the standard deviation of the Gaussian smoothing filter). To convert the value in the param-file to an angular smoothing scale, use the resolution of the map set in the penultimate row. Here the resolution is 60 arcseconds/pxl, so **SS*sqrt(2)=9.33 corresponds to 396 arcsec = 6.6 arcmin**.
+	- **X3** designates the clipping threshold. This tells the pipeline to read the convergence value saved in the file: Clipping_K/Clip_Thresholds/X3_Threshold (which is 0.01). Other thresholds (X0-X4) can be found in this subdirectory, and the user is free to create new threshold files and use those.
+	- **0.27** is the standard deviation of the Gaussian shape noise (SN) added to the shear values in simulations. For no shape noise, this should be set to 0.
+	- **0.1** and **0.3**: These are the lower and upper redshift cuts to make on the data. Working with KiDS1000-like simulations, these numbers should always be (0.1-0.3, 0.3-0.5, 0.5-0.7, 0.7-0.9, 0.9-1.2). Note that the SN value is different for these 5 redshift bins: (0.27, 0.258, 0.273, 0.254, 0.27)
+
+
 
 
 
