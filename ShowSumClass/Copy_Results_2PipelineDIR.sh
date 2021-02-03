@@ -18,7 +18,7 @@ rsync -avz $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/NLOS* $pipeline
 rsync -avz $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/*.CorrFun.asc $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins/
 
 # Copy Ekappa maps - useful if you want to do cosmology with the 1-pt PDF(K)
-#rsync -avz $data_DIR/Mass_Recon/$DIRname/*Ekappa.fits $pipeline_DIR/Mass_Recon/$DIRname/
+rsync -avz $data_DIR/Mass_Recon/$DIRname/*Ekappa.fits $pipeline_DIR/Mass_Recon/$DIRname/
 # Copy smoothed shear maps - useful if you want to see what effect of smoothing is on xi_+-
 #rsync -avz $data_DIR/Mass_Recon/$DIRname/*g*smooth.fits $pipeline_DIR/Mass_Recon/$DIRname/
 

@@ -25,3 +25,4 @@ else
     echo "But you have set zlo and zhi to $zlo, $zhi. Not programmed to deal with this shit. EXITING."
     exit
 fi
+

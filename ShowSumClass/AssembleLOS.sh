@@ -49,11 +49,11 @@ elif [ "$sqdeg" == "100" ]; then
 	# First decide which SLICS: KiDS-like (KV450 or KiDS1000) or Generic (LSST-like)?
 	if [[ "$z" == *"KiDS"* ]]; then
 	    
-	    if [ "$z" == "KiDS1000" ]; then
+	    if [[ "$z" == *"KiDS1000"* ]]; then
 		echo "THIS IS A SLICS KiDS1000-like RUN..."
 		# Annoying, the redshift cuts have already been made on KiDS1000 mocks, so
 		# we're limited to using catatalogues with the KiDS1000 bins:
-		source ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
+		source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 	     	filename=/disk10/jharno/MockProducts/KiDS1000/${bin_name}/GalCatalog_KiDS1000_${bin_name}_LOS
 	    else
 		echo "THIS IS A SLICS KV450-like RUN..."

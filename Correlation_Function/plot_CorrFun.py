@@ -360,8 +360,8 @@ colour_array = ['magenta', 'darkblue']
 
 
 # The plotting bit
-#Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
-#Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
+Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
+Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
 
 stack_errCFp = np.stack((errCFp_c, np.zeros(len(theta)) ))
 stack_errCFp_cuc = np.stack((errCFp_cuc, np.zeros(len(theta)) ))

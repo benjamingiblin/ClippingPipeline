@@ -56,16 +56,16 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
     fi
 
     # Now use the z keyword to determine if it's KiDS-like or LSST-like cosmoSLICS
-    mocks_datadir=/home/jharno/Projects/cosmoSLICS/${cosmol_fname}_${seed}/GalCat/
+    mocks_datadir=/home/jharno/Projects/cosmoSLICS/${cosmol_fname}_${seed}/GalCat
     if [[ "$z" == *"KiDS"* ]]; then
 	# KiDS-like mocks, but is it KV450 or KiDS1000 like?
-	if [ "$z" == "KiDS1000" ]; then
-	    Tablename="$mocks_datadir/KiDS1000/GalCatalog...."
-	    mocks_datadir+="/KiDS1000/GalCat/"
+	if [[ "$z" == *"KiDS1000"* ]]; then
+	    Tablename="${mocks_datadir}/KiDS1000/GalCatalog..."
+	    mocks_datadir+="/KiDS1000/"
 	    keyword_z_phot=z_spec
 	    keyword_z_spec=z_spec # redshift cut already made, so only z_spec is saved.
 	    
-	    source ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
+	    source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 	    filename=GalCatalog_KiDS1000_${bin_name}_LOS${los_fname}.fits
 	    
 	else
@@ -91,7 +91,7 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 	exit
     fi
     input=$mocks_datadir/$filename
-
+    #echo "READING IN THIS cosmoSLICS FILE: $input"
 else
     # 'Cosmol' is not part of name: it's a SLICS run...
     # But which SLICS? KiDS-like (KiDS1000 or KV450) or LSST-like?
