@@ -39,8 +39,14 @@ Then, follow these steps to install the clipping pipeline. For the purposes of i
 
    Install_Pipeline/Install_Pipeline.sh
 
-It is recommended you remove the commenting on the "exit 0" line in the installation script after this is done, to prevent it being ran accidentally.
+5. Open your .bashrc script (on cuillin, this is stored in /home/<user_name>/). Copy and paste the following line at the bottom: ulimit -s unlimited
 
+
+Note that your .bashrc should be automatically sourced every time you log on to cuillin. If it isn't, then anaconda will not be set to your default python package and your ulimit will not be set to unlimited every time you log on. If you're .bashrc is not being automatically sourced (check your python path to confirm if it is), then you can correct this by making a .bash_profile script in your home diretcory containing this line only:
+
+source ~/.bashrc
+
+Also note it is recommended you remove the commenting on the "exit 0" line in the installation script after this is done, to prevent it being ran accidentally.
 
 The pipeline should now be correctly configured for the user. 
 

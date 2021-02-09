@@ -10,6 +10,7 @@
 # NOTE TO SELF: This mass map sets the image dimensions to be that of the mask
 # Ergo your X and Y coords should be in the mask frame.
 
+module load intel
 
 #overall_DIR=$PWD
 pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
