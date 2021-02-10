@@ -150,6 +150,7 @@ if [ "$RUN" == "Sims_Run" ]; then
 			# But which redshift bin? JHD's directories for KiDS-1000 are different for each zbin:		       
 			source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 			SLICS_KiDS_DIR+="/$bin_name"
+			SLICS_dataDIR+="/$bin_name"
 			fname_tag="KiDS1000_${bin_name}"
 						
 		    else

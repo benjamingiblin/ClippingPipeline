@@ -95,12 +95,12 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 else
     # 'Cosmol' is not part of name: it's a SLICS run...
     # But which SLICS? KiDS-like (KiDS1000 or KV450) or LSST-like?
-    mocks_datadir=$SLICS_dataDIR
     
-    input=$mocks_datadir/GalCatalog_LOS"$los".fits
     # The Table name and redshift keywords differ between KiDS-like (KV450 & KiDS1000) & Generic (LSST-like)
     if [[ "$z" == *"KiDS"* ]]; then
 	if [ "$z" == "KiDS1000" ]; then
+	    source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
+	    SLICS_dataDIR+="/$bin_name"
 	    Tablename=GalCat
 	    keyword_z_phot=z_spec
 	    keyword_z_spec=z_spec
@@ -114,27 +114,33 @@ else
 	    keyword_z_phot=z_phot
 	    keyword_z_spec=z_true
 	fi
-
+	
 	
     elif [[ "$z" == *"LSST"* ]]; then
 	Tablename=/disk10/jharno/MockProducts/Generic/GalCatalog.dat_LOS${los}
 	keyword_z_phot=z_true
 	keyword_z_spec=z_true
     fi
-    
+
+    mocks_datadir=$SLICS_dataDIR
+    input=$mocks_datadir/GalCatalog_LOS"$los".fits
+    #echo "Reading in this SLICS file: $input"
 fi
 
 output=$data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_Xm_Ym_e1_e2_w.dat
-
 $ldactoasc -i $input -t $Tablename -k x_arcmin y_arcmin shear1 shear2 $keyword_z_phot $keyword_z_spec > $output
 
+# OPTIONAL - SAVE AN n(z) FILE
+awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_zCut.dat
 
-if [ $ZBcut != "None" ]; then
-	echo "Making redshift cut on catalogue. $zlo to $zhi"
-	#awk '{print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_z.dat
-	awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_zCut.dat
-	# Make the z cut
-	awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
+
+if [[ "$z" != *"KiDS1000"* ]] && [ $ZBcut != "None" ]; then
+    # Only make the redshift cut if not dealing with KiDS1000 mocks (where cut has already been made) and ZBcut is not None.
+
+    echo "Making redshift cut on catalogue. $zlo to $zhi"
+    # Make the z cut
+    awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
+	
 else
     awk 'NR>6 {print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
 fi
