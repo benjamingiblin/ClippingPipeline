@@ -2,10 +2,17 @@ import sys
 import numpy as np
 import pylab as plt
 from matplotlib import rc
-rc('text',usetex=True)
-rc('font',size=18)
-rc('legend',**{'fontsize':18})
-rc('font',**{'family':'serif','serif':['Computer Modern']})
+from matplotlib import rcParams
+# Some font setting
+rcParams['ps.useafm'] = True
+rcParams['pdf.use14corefonts'] = True
+
+font = {'family' : 'serif',
+        'weight' : 'normal',
+        'size'   : 14}
+
+plt.rc('font', **font)
+plt.rcParams["mathtext.fontset"] = "cm"
 
 
 
@@ -457,13 +464,12 @@ class Handle_CF_Files:
 	def Plot_Covariance(self, CCC_Mat, theta, savename):
 
 		plt.figure()
-		plt.xscale('log')
-		plt.yscale('log')
+		
 		plt.imshow(CCC_Mat, vmin=CCC_Mat.min(), vmax=CCC_Mat.max(), origin='lower', interpolation='nearest', extent = [theta.min(), theta.max(), theta.min(), theta.max()])
 		plt.ylabel(r'$\theta$ [arcmin]')
 		plt.xlabel(r'$\theta^{\prime}$ [arcmin]')
 		plt.colorbar()
-		plt.savefig('%sCCC_Mat.eps'%(savename))
+		plt.savefig('%sCCC_Mat.png'%(savename))
 		#plt.show()
 		return
 
@@ -498,7 +504,7 @@ class Handle_CF_Files:
  
 
 	# last argument pm+ '+' or '-'
-	def Plot_CFs(self, theta_array, CF_array, errCF_array, legend_array, colour_array, theta_theory, CF_theory, savename, pm):
+	def Plot_CFs(self, theta_array, CF_array, errCF_array, legend_array, colour_array, savename, pm):
 
 		if pm != '+' and pm != '-':
 			print('	ARGUMENTS:')
@@ -527,13 +533,10 @@ class Handle_CF_Files:
 		# Reshape the arrays: means code won't break for 1D CF_array
 		CF_array = np.reshape(CF_array, (no_CFs, self.no_bins) )
 		errCF_array = np.reshape(errCF_array, (no_CFs, self.no_bins) )
-		theta_array = np.reshape(theta_array, (no_CFs, self.no_bins) )
-
-
+		
 
 		plt.figure()
 		plt.xscale('log')
-		plt.plot(theta_theory, theta_theory*CF_theory*1.e4, 'b:', linewidth=3.0, label = r'Takahashi$+12$')
 
 		for i in range(0, len(theta_array[:,0])):
 
@@ -542,11 +545,12 @@ class Handle_CF_Files:
 
 
 		plt.xlim([0.8*np.min(theta_array[:,0]), 1.2*np.max(theta_array[:,-1])])
-		plt.ylim([0., 1.5*np.max(theta_theory*CF_theory*1.e4)])
+		plt.ylim([ np.min(theta_array[0,:]*CF_array[0,:]*1.e4),
+                           1.5*np.max(theta_array[0,:]*CF_array[0,:]*1.e4) ])
 		plt.xlabel(r'$\theta$ [arcmin]')
 		plt.ylabel(r'$\theta \xi_{%s} \times 10^{-4}$'%pm)
 		plt.legend(loc='best')
-		plt.savefig('%s.CF%s.eps'%(savename,pm))
+		plt.savefig('%s.CF%s.png'%(savename,pm))
 		#plt.show()
 
 		return
@@ -620,7 +624,7 @@ class Handle_CF_Files:
 		plt.xlabel(r'$\theta$ [arcmin]')
 		plt.ylabel(r'$\xi_{%s}^{c}/\xi_{%s}^{uc}$'%(pm,pm))
 		plt.legend(loc='best')
-		plt.savefig('%s.CF%sRatio.eps'%(savename,pm))
+		plt.savefig('%s.CF%sRatio.png'%(savename,pm))
 		#plt.show()	
 
 		return
