@@ -60,13 +60,27 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
     if [[ "$z" == *"KiDS"* ]]; then
 	# KiDS-like mocks, but is it KV450 or KiDS1000 like?
 	if [[ "$z" == *"KiDS1000"* ]]; then
-	    Tablename="${mocks_datadir}/KiDS1000/GalCatalog..."
-	    mocks_datadir+="/KiDS1000/"
-	    keyword_z_phot=z_spec
-	    keyword_z_spec=z_spec # redshift cut already made, so only z_spec is saved.
 	    
+	    # Okay it's KiDS1000-like mocks. Get the zbin:
 	    source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
-	    filename=GalCatalog_KiDS1000_${bin_name}_LOS${los_fname}.fits
+	    # But is this the IA mocks or is it the normal (sys-free) mocks?
+	    
+	    if [[ “$IA" == *”$IA"* ]]; then
+		# IA mocks stored in v. different directory:
+		mocks_datadir=/home/jharno/public_html/cosmo-SLICS/data/${cosmol_fname}_${seed}/IA_mocks_smooth05Mpcoverh/
+		filename=GalCatalog_IA_${bin_name}_AIA1.0.dat_LOS${los_fname}
+	    else
+		Tablename="${mocks_datadir}/KiDS1000/GalCatalog..."
+		# infuriatingly, the Tablename for fid has one less '.' than the other cosmols:
+		if [ "$cosmol_fname" != "fid" ]; then Tablename+="."; fi
+	    
+		mocks_datadir+="/KiDS1000/"
+		keyword_z_phot=z_spec
+		keyword_z_spec=z_spec # redshift cut already made, so only z_spec is saved.
+	    
+  		filename=GalCatalog_KiDS1000_${bin_name}_LOS${los_fname}.fits
+	    fi
+	    
 	    
 	else
 	    mocks_datadir+="/KV450/GalCat/"
@@ -128,11 +142,24 @@ else
 fi
 
 output=$data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_Xm_Ym_e1_e2_w.dat
-$ldactoasc -i $input -t $Tablename -k x_arcmin y_arcmin shear1 shear2 $keyword_z_phot $keyword_z_spec > $output
 
-# OPTIONAL - SAVE AN n(z) FILE
-awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_zCut.dat
 
+if [[ “$IA" == *”$IA"* ]]; then
+    # The IA mocks are ascii catalogues (use awk)
+    # (x_arcmin, y_arcmin, redshift, pure_g1, pure_g2, pure_noise1, pure_noise2, pure_IA1, pure_IA2,...)
+    # save IA components separately, add noise and IA*<amp> in Sims_DataGrab.py
+    awk '{print $1, $2, $4, $5}' < $input > $output
+    awk '{print $8, $9}' < $input > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_IA1_IA2.dat
+    
+else
+    # All other catalogues are FITS table format (use ldactoasc)
+    $ldactoasc -i $input -t $Tablename -k x_arcmin y_arcmin shear1 shear2 $keyword_z_phot $keyword_z_spec > $output
+
+    # OPTIONAL - SAVE AN n(z) FILE
+    awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_zCut.dat
+
+fi
+    
 
 if [[ "$z" != *"KiDS1000"* ]] && [ $ZBcut != "None" ]; then
     # Only make the redshift cut if not dealing with KiDS1000 mocks (where cut has already been made) and ZBcut is not None.

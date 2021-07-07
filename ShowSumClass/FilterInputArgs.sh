@@ -41,7 +41,8 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 	ThBins=${args[11]}
 	MRres=${args[12]} # resolution to use in mass reconstruction (mask with this res should exist)
 	OATH=${args[13]}
-
+	IA=${args[14]}
+	#echo "IA is $IA"
 	#echo $gpam, $SS, $sigma, $SN, $mask, $z, $PS, $sqdeg, $cosmol, "END"
 
 
@@ -52,12 +53,21 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 		name_start='NOISE_'
 		DIRname_start='_NOISE'
 	elif [[ $SN == *"Cycle"* ]] || [[ $SN == *"cycle"* ]]; then
-		if [ $gpam == "3.32" ]; then
-			name_start='SN0.28_'
-		else
-			name_start='SN0.29_'
-		fi
-		DIRname_start='_SNCycle'
+
+	    if [[ "$z" == *"KiDS1000"* ]]; then
+		# Use KiDS1000 redshift binning and hence SN values.
+		# These are not saved in the paramfile when running SNCycle,
+		# Use following code to identify them:
+		source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
+		name_start="SN${sigma_e}_"
+		
+	    elif [ $gpam == "3.32" ]; then
+		name_start='SN0.28_'
+	    else
+		name_start='SN0.29_'
+	    fi
+	    DIRname_start='_SNCycle'
+	    
 	elif [ $SN == "0." ] || [ $SN == "0" ]; then
 		name_start='NF_'
 		DIRname_start='_NF'
@@ -143,7 +153,8 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 	elif  [ "$sqdeg" == "5000" ]; then
 		Prepend="NSIDE"$MRres"_"
 	fi
-
+	
+	if [[ “$IA" == *”$IA"* ]]; then Prepend=${Prepend}${IA}_; fi
 
 	name=$name_start$name_end
 	DIRname="$Prepend$sqdeg"Sqdeg$DIRname_start$DIRname_mid"$gpam"GpAM_z"$z"_ZBcut"$ZBcut$DIRname_end"

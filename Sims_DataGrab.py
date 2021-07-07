@@ -133,37 +133,48 @@ else: # it's the 100 sqdeg run.
 ######################## SHAPE NOISE #############################
 # Decide if you want a noise-only, shear+noise, or shear-only calculation
 if SN == 'ALL' or SN == 'All' or SN == 'all' or 'Cycle' in DIRname:
-	
-	if float(gpam) == 3.32: 
-		SN_level=0.28
-	else:
-		SN_level=0.29
-	print("SN_level is %s" %SN_level)
-	# make it so the SN for a given LOS and cosmol is ALWAYS the same, using np.random.seed
 
-	if 'Cycle' in DIRname:
-		# get noise realisation number
-		intlos = int(los.split('n')[0])	
-		ncycle = int(los.split('n')[-1])
-		seed1 = intlos + ncycle*100
-		seed2 = intlos + 201 + ncycle*100
-		print("seed1 and seed2 are %s and %s"%(seed1,seed2))
-	else:
-		seed1 = int(los)
-		seed2 = int(los) + 201 # made it so all cosmol have same SN.
+        # Set the noise level (not specified in param_file if doing Cycle):
+        if 'KiDS1000' in DIRname:
+                # Must set SN to values measured in each KiDS1000 bin.
+                bin_edges = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.2])
+                sigma_e_values = [0.270, 0.258, 0.273, 0.254, 0.270]
+                
+                # Note: this only works for the 5 zbins used for cosmic shear.
+                idx_sig = np.where(float(zlo) == bin_edges)[0][0]
+                SN_level = sigma_e_values[idx_sig]
+        else:
+                if float(gpam) == 3.32: 
+                        SN_level=0.28
+                else:
+                        SN_level=0.29
+                        
+        print("SN_level is %s" %SN_level)
+
+        # make it so the SN for a given LOS and cosmol is ALWAYS the same, using np.random.seed
+        if 'Cycle' in DIRname:
+                # get noise realisation number
+                intlos = int(los.split('n')[0])	
+                ncycle = int(los.split('n')[-1])
+                seed1 = intlos + ncycle*100
+                seed2 = intlos + 201 + ncycle*100
+                print("seed1 and seed2 are %s and %s"%(seed1,seed2))
+        else:
+                seed1 = int(los)
+                seed2 = int(los) + 201 # made it so all cosmol have same SN.
 								# So only diff in signal is due to cosmol.
         
-	# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
-	e1_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
-	e2_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
+        # 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
+        e1_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
+        e2_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
 
-	if SN == 'ALL' or SN == 'All' or SN == 'all':
-		e1_temp = 0. # noise-only
-		e2_temp = 0.
+        if SN == 'ALL' or SN == 'All' or SN == 'all':
+                e1_temp = 0. # noise-only
+                e2_temp = 0.
 
 elif float(SN) == 0.:
-	e1_rng = 0. # shear-only
-	e2_rng = 0.
+        e1_rng = 0. # shear-only
+        e2_rng = 0.
 
 else:
 	# make it so the SN for a given LOS is ALWAYS the same, using np.random.seed
@@ -173,21 +184,34 @@ else:
 	#e2_rng = np.random.normal(0., float(SN), len(e1_temp))
 
 	# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
-	e1_rng = Generate_Unitary_Shape_Noise(int(los), float(SN))
-	e2_rng = Generate_Unitary_Shape_Noise(int(los)+201, float(SN))		
+        e1_rng = Generate_Unitary_Shape_Noise(int(los), float(SN))
+        e2_rng = Generate_Unitary_Shape_Noise(int(los)+201, float(SN))		
 
 
-######################## SHAPE NOISE #############################
+        
+######################## SHAPE NOISE & IAs #############################
+# 28/05/2019 - edit to do more accurate contribution of SN to e_obs:
+# e = e1 + j*e2
+e_rng = e1_rng + 1j*e2_rng     # noise
+e_temp = e1_temp + 1j*e2_temp  # shear
 
-# 28/05/2019 - edit to do more accurate contribution of SN to e_obs
-e_rng = e1_rng + 1j*e2_rng
-e_temp = e1_temp + 1j*e2_temp
+# complex addition of shear and noise:
 e_obs = (e_rng + e_temp) / (1+ e_rng*np.conj(e_temp))
 e1 = np.real(e_obs)
 e2 = np.imag(e_obs)
 
 #e1 = e1_temp + e1_rng
 #e2 = e2_temp + e2_rng
+
+if "IA" in DIRname:
+	IA_amp = float(DIRname.split('IA')[-1].split('_')[0])
+	IA1, IA2 = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_IA1_IA2.dat'%(data_DIR, DIRname, name, gpam, los),
+                              usecols=(0,1), unpack=True)
+	e_IA = IA1*IA_amp + 1j*IA2*IA_amp # complex IA
+       
+	# complex addition of e_obs and e_IA
+	e_obs = (e_IA + e_obs) / (1+ e_IA*np.conj(e_obs))
+
 
 
 # Convert X,Y (in arcmin) to coords to mask frame (PSm is in deg/pxl)

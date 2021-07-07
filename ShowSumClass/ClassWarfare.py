@@ -214,17 +214,33 @@ class Filter_Input:
 		ThBins=args[11]
 		MRres=args[12]
 		OATH=args[13]
-
-
+		try:
+			IA=args[14]
+		except IndexError:
+			IA=""
+                
 		# Check if shape noise
 		if SN == 'ALL' or SN == 'All' or SN == 'all':
 			name_start = 'NOISE_'
 			DIRname_start='_NOISE'
 		elif 'Cycle' in SN or 'cycle' in SN:
-			if float(gpam) == 3.32:
-				name_start='SN0.28_'
+
+			# Set the noise level (not specified in param_file if doing Cycle):
+			if 'KiDS1000' in str(gpam):
+				# Must set SN to values measured in each KiDS1000 bin.
+				bin_edges = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.2])
+				sigma_e_values = [0.270, 0.258, 0.273, 0.254, 0.270]
+				# Note: this only works for the 5 zbins used for cosmic shear.
+				idx_sig = np.where(float(zlo) == bin_edges)[0][0]
+				SN_level = sigma_e_values[idx_sig]
+				name_start='SN%s_' %SN_level
+                                
 			else:
-				name_start='SN0.29_'
+			        if float(gpam) == 3.32:
+				        name_start='SN0.28_'
+			        else:
+				        name_start='SN0.29_'
+                                        
 			DIRname_start='_SNCycle'
 		else:
 			try:
@@ -317,6 +333,10 @@ class Filter_Input:
 				Prepend=''
 			else:
 				Prepend='MRres%s_' %MRres
+	
+			if "IA" in IA:
+				Prepend += '%s_' %IA
+
 		elif int(sqdeg) == 5000 :
 			Prepend='NSIDE%s_'%MRres 	# 'NSIDExxxx_'
 		
