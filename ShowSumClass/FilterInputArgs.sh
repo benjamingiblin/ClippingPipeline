@@ -154,7 +154,7 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 		Prepend="NSIDE"$MRres"_"
 	fi
 	
-	if [[ “$IA" == *”$IA"* ]]; then Prepend=${Prepend}${IA}_; fi
+	if [[ $IA == *"IA"* ]]; then Prepend=${Prepend}${IA}_; fi
 
 	name=$name_start$name_end
 	DIRname="$Prepend$sqdeg"Sqdeg$DIRname_start$DIRname_mid"$gpam"GpAM_z"$z"_ZBcut"$ZBcut$DIRname_end"
