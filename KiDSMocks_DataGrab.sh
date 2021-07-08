@@ -167,10 +167,14 @@ if [[ "$z" != *"KiDS1000"* ]] && [ $ZBcut != "None" ]; then
     echo "Making redshift cut on catalogue. $zlo to $zhi"
     # Make the z cut
     awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
-	
-else
-    awk 'NR>6 {print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
+
 fi
+
+# unnecessary else statement which saves new catalogue excluding redshift info
+# and skips first 6 rows of data. Why is this?
+#else
+#    awk 'NR>6 {print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
+#fi
 
 
 
