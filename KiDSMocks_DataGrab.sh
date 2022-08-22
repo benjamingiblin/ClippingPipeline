@@ -143,7 +143,6 @@ fi
 
 output=$data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_Xm_Ym_e1_e2_w.dat
 
-
 if [[ $IA == *"IA"* ]]; then
     # The IA mocks are ascii catalogues (use awk)
     # (x_arcmin, y_arcmin, redshift, pure_g1, pure_g2, pure_noise1, pure_noise2, pure_IA1, pure_IA2,...)
@@ -156,7 +155,7 @@ else
     $ldactoasc -i $input -t $Tablename -k x_arcmin y_arcmin shear1 shear2 $keyword_z_phot $keyword_z_spec > $output
 
     # OPTIONAL - SAVE AN n(z) FILE
-    awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_zCut.dat
+    #awk -v zl=$zlo -v zh=$zhi '{ if ($5 >= zl && $5 <= zh) print $5, $6}' < $output > $data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_zCut.dat
 
 fi
     
@@ -170,8 +169,9 @@ if [[ "$z" != *"KiDS1000"* ]] && [ $ZBcut != "None" ]; then
 
 fi
 
-# unnecessary else statement which saves new catalogue excluding redshift info
-# and skips first 6 rows of data. Why is this?
+# this else statement which saves new catalogue excluding redshift info &
+# skipping first 6 rows of file (which are header). This breaks the IA-mock runs
+# where two catalogues need to be concatenated. It's also not really necessary for the other runs.
 #else
 #    awk 'NR>6 {print $1, $2, $3, $4}' < $output > $data_DIR/Mass_Recon/$DIRname/temp$los_start && mv $data_DIR/Mass_Recon/$DIRname/temp$los_start $output
 #fi

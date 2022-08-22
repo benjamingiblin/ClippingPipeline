@@ -17,8 +17,9 @@ paramfile2=$2
 los_start=$3
 los_end=$4
 
-./Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end
 
+./Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end
+#python Correlation_Function/plot_CorrFun.py Sims_Run $paramfile1 $los_start $los_end $paramfile2
 
 
 ###########SBATCH -o log_Cosmol${i}.out 

@@ -10,7 +10,15 @@
 pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
 data_DIR='/data/bengib/Clipping_SimsLvW/'     # If running on a supercomputer, these will be different
 
-source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5 
+if [[ "$5" == *"param_files"* ]]; then
+    # 2 input paramfiles inputted, this means we're combing shear cats for different zbins
+    # assemble the new (combined-redshift) DIRname & filter inputs:
+    source $pipeline_DIR/ShowSumClass/Assemble_Combine-zbin-DIRname.sh $1 $2 $3 $4 $5
+    paramfile=$paramfile1
+else
+    # 1 paramfile inputted, just working with shear cat for single zbin
+    source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
+fi
 
 
 # The locking mechanism to prevent multiple mass mapping/2D FFT calculations
@@ -30,31 +38,6 @@ if [ "$RUN" == "Sims_Run" ]; then
 	
 	# Assemble the LOS into one array over which you loop
 	source ShowSumClass/AssembleLOS.sh $DIRname $sqdeg $z $cosmol $los_start $los_end
-
-	
-	# Make Field subdirectories if they don't exist already
-	if [ ! -d "$pipeline_DIR/Mass_Recon/$DIRname" ]; then
-		mkdir $pipeline_DIR/Mass_Recon/$DIRname
-	fi
-
-
-	if [ ! -d "$pipeline_DIR/Clipping_K/$DIRname" ]; then
-		mkdir $pipeline_DIR/Clipping_K/$DIRname
-	fi
-
-	
-        if [ ! -d $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins ]; then
-	    mkdir -p $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins
-	fi
-
-	if [ ! -d $pipeline_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins ]; then
-	    mkdir -p $pipeline_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins
-	fi
-	
-	
-
-
-
 
 	echo "You have selected: 
 		  Mock run: 		$sqdeg Sqdeg
@@ -77,6 +60,7 @@ if [ "$RUN" == "Sims_Run" ]; then
 
 
 else
+    # NEED TO EDIT THIS PART TO SET UP MULTIPLE ZBcut DIRECTORIES
 
 	# Assemble the Fields into array over which you loop
 	Loop_Array=()
@@ -114,32 +98,33 @@ else
 	echo "	No. of Noise Realisations: 		$NOISE_NLOS"
 
 
-	# Make Field subdirectories if they don't exist already
-	if [ ! -d "$pipeline_DIR/Mass_Recon/$DIRname" ]; then
-		mkdir $pipeline_DIR/Mass_Recon/$DIRname
-	fi
-
-
-	if [ ! -d "$pipeline_DIR/Clipping_K/$DIRname" ]; then
-		mkdir $pipeline_DIR/Clipping_K/$DIRname
-	fi
-
-
-	if [ ! -d $pipeline_DIR/Correlation_Function/$DIRname ]; then
-		mkdir $pipeline_DIR/Correlation_Function/$DIRname
-	fi
-
-	if [ ! -d $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins ]; then
-		mkdir $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins
-	fi
-		
-	
-
 	final_dir=$pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins
 	timerfile=$final_dir/Timings.Blind$Blind.SS$SS.$sigma"sigma".$timerfile_subname.txt
 	clipfilepath=$pipeline_DIR/Clipping_K/Clip_Thresholds/ClipThreshold_"$sigma"sigma.Blind$Blind.SS$SS
 
 fi
+
+
+# Make directories if they don't exist already                                                     
+for DIR in $pipeline_DIR $data_DIR; do
+    for dir in $DIRname $DIRname1 $DIRname2; do
+        # DIRname1/2 only exist if working with multiple paramfiles/zbins                                   
+        for subdir in "Mass_Recon" "Clipping_K" "Correlation_Function" "Tree_Correlation_Function"; do
+
+	    make_directory="$DIR/$subdir/$dir"
+	    if [[ "$make_directory" == *"Correlation_Function"* ]]; then
+		make_directory=$make_directory/ThBins$ThBins
+	    fi
+	    	
+	    if [ ! -d "$make_directory" ]; then
+                mkdir -p $make_directory
+            fi
+
+        done
+    done
+done
+
+
 
 
 echo "Master will loop over the following Fields/Lines of sight"
@@ -148,18 +133,29 @@ for f in ${Loop_Array[*]}; do
 done
 
 
+
 # rsync all required data to data_DIR if pipeline_DIR != data_DIR
 if [ "$pipeline_DIR" != "$data_DIR" ]; then	source $pipeline_DIR/ShowSumClass/Change_DIR_of_outputs.sh; fi
 
+# If an extra parameter file is submitted, & we are working with SLICS,
+# and we are working with K1000 mocks, we need to run the above script twice.
+# This is because this script copies SLICS cat's to the workers, and in the case of
+# K1000 mocks, there's different cats for different zbins.
+# Hence two different sets of cats need to be copied.
+if [[ "$5" == *"param_files"* ]]; then
+    echo "zlo2 and zhi2 are $zlo2 and $zhi2"
+    zlo=$zlo2 # redefine these as those corresponding to 2nd paramfile (get set in Assemble_Combine-zbin-DIRname.sh)
+    zhi=$zhi2 # (these are used by Change_DIR_...sh to find the correct cats to copy.
+    source $pipeline_DIR/ShowSumClass/Change_DIR_of_outputs.sh
+fi
 
 
 rm -f $timerfile # remove the one already there, don't just peg onto old one.
 
-
 echo "Time at which pipeline started: $(date)" >> $timerfile
 
 # Now loop over the Fields/LOS
-for Part in I II; do  # I II 
+for Part in I; do  # I II 
 	counter=0
 	for f in ${Loop_Array[*]}; 
 	do
@@ -186,7 +182,7 @@ for Part in I II; do  # I II
 
 		if [ "$RUN" == "Sims_Run" ]; then
 		        
-			$pipeline_DIR/SkelePipeline_Part"$Part".sh $RUN $paramfile $f $los_end &
+			$pipeline_DIR/SkelePipeline_Part"$Part".sh $RUN $paramfile $f $los_end $paramfile2 &
 			
 			# Exit if there's a problem - NOTE. Doesnt always work, since it may take time to hit an error
 			# ...whereas the pipeline has already moved onto commence subsequent LOS runs.
@@ -253,12 +249,14 @@ fi
 
 
 
+# If results are being saved to data_DIR, rsync them back to pipeline_DIR
+if [ "$pipeline_DIR" != "$data_DIR" ]; then     source $pipeline_DIR/ShowSumClass/Copy_Results_2PipelineDIR.sh; fi
 
 
-
-if [ "$RUN" == "Sims_Run" ]; then
-	#rm -rf $data_DIR/Mass_Recon/$DIRname/*_Xm_Ym_e1_e2_w.dat
-	echo "Not deleting catalogue in Mass_Recon this time... do this by hand"
+if [ "$RUN" == "Sims_Run" ] && [[ $data_DIR == "/data/"* ]]; then
+    #rm -rf $data_DIR/Mass_Recon/$DIRname/*_Xm_Ym_e1_e2_w.dat
+    rm -f $data_DIR/Mass_Recon/$DIRname/*SS${SS}*Ekappa.fits
+    #echo "Not deleting catalogue in Mass_Recon this time... do this by hand"
 fi
 
 
@@ -269,9 +267,6 @@ if [ "$sigma" != "X1" ] && [ "$sigma" != "X2" ] && [ "$sigma" != "X3" ]; then
 fi	
 
 
-
-# If results are being saved to data_DIR, rsync them back to pipeline_DIR
-if [ "$pipeline_DIR" != "$data_DIR" ]; then	source $pipeline_DIR/ShowSumClass/Copy_Results_2PipelineDIR.sh; fi
 
 
 

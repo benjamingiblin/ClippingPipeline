@@ -20,12 +20,16 @@ classdir = pipeline_DIR + "/ShowSumClass"
 sys.path.insert(0, classdir) # add directory in which classes & functions 
 							 # are defined to the python path
 from ClassWarfare import Filter_Input, Format_2Darray
-from FunkShins import interpolate2D, Mask_Shear, Lower_Res_Mask
+from FunkShins import interpolate2D, Mask_Shear, Lower_Res_Mask, Combine_zbin_DIRname
 
+if len(sys.argv)-1 > 4 and "param_files" in sys.argv[-1]:
+	# 2  paramfiles have given, it's a combination/cross redshift problem (change input/output DIRname)
+	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end = Combine_zbin_DIRname( sys.argv )
+else:
+	variable = Filter_Input(sys.argv)
+	variable.Filter()
+	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end = variable.Unpack_Sims()
 
-variable = Filter_Input(sys.argv)
-variable.Filter()
-name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end = variable.Unpack_Sims()
 RUN = sys.argv[1]
 
 #print(name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, los, los_end)
@@ -126,8 +130,13 @@ else: # it's the 100 sqdeg run.
 	X, Y, e1_temp, e2_temp = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_Xm_Ym_e1_e2_w.dat'%(data_DIR, DIRname, name, gpam, los), unpack=True, usecols=(0, 1, 2,3))
 
 
-
-
+# Need to make it so the SN for a given LOS and cosmol is ALWAYS the same,
+# but different for each redshift bin,                          
+# using np.random.seed()
+if type(eval(zlo)) == float and type(eval(zhi)) == float:
+	zfactor = int( (eval(zlo)+eval(zhi)) *10000 ) # different for each zbin, and not repeated for any LOS.
+else:
+        zfactor = 0
 
 
 ######################## SHAPE NOISE #############################
@@ -144,33 +153,32 @@ if SN == 'ALL' or SN == 'All' or SN == 'all' or 'Cycle' in DIRname:
                 idx_sig = np.where(float(zlo) == bin_edges)[0][0]
                 SN_level = sigma_e_values[idx_sig]
         else:
-                if float(gpam) == 3.32: 
-                        SN_level=0.28
-                else:
-                        SN_level=0.29
+                SN_level=0.28 
                         
         print("SN_level is %s" %SN_level)
 
-        # make it so the SN for a given LOS and cosmol is ALWAYS the same, using np.random.seed
         if 'Cycle' in DIRname:
                 # get noise realisation number
                 intlos = int(los.split('n')[0])	
                 ncycle = int(los.split('n')[-1])
-                seed1 = intlos + ncycle*100
-                seed2 = intlos + 201 + ncycle*100
+                seed1 = intlos + ncycle*100 + zfactor
+                seed2 = intlos + 2001 + ncycle*100 + zfactor
                 print("seed1 and seed2 are %s and %s"%(seed1,seed2))
         else:
-                seed1 = int(los)
-                seed2 = int(los) + 201 # made it so all cosmol have same SN.
-								# So only diff in signal is due to cosmol.
+                seed1 = int(los) + zfactor + 19
+                seed2 = int(los) + 2001 + zfactor + 21
+                                                  # made it so all cosmol have same SN.
+		                                  # So only diff in signal is due to cosmol.
+                                                  # Also noise maps have different seed to SLICS.
+                print("seed1 and seed2 are %s and %s"%(seed1,seed2))
+                e1_temp = np.zeros(len(X)) # noise-only 
+                e2_temp = np.zeros(len(X))
+                
         
         # 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
         e1_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
-        e2_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
+        e2_rng = Generate_Unitary_Shape_Noise(seed2, SN_level)
 
-        if SN == 'ALL' or SN == 'All' or SN == 'all':
-                e1_temp = 0. # noise-only
-                e2_temp = 0.
 
 elif float(SN) == 0.:
         e1_rng = 0. # shear-only
@@ -184,9 +192,11 @@ else:
 	#e2_rng = np.random.normal(0., float(SN), len(e1_temp))
 
 	# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
-        e1_rng = Generate_Unitary_Shape_Noise(int(los), float(SN))
-        e2_rng = Generate_Unitary_Shape_Noise(int(los)+201, float(SN))		
-
+        seed1 = int(los) + zfactor
+        seed2 = int(los) + 2001 + zfactor
+        e1_rng = Generate_Unitary_Shape_Noise(seed1, float(SN))
+        e2_rng = Generate_Unitary_Shape_Noise(seed2, float(SN))		
+        print("seed1 and seed2 are %s and %s"%(seed1,seed2))
 
         
 ######################## SHAPE NOISE & IAs #############################
@@ -197,8 +207,6 @@ e_temp = e1_temp + 1j*e2_temp  # shear
 
 # complex addition of shear and noise:
 e_obs = (e_rng + e_temp) / (1+ e_rng*np.conj(e_temp))
-e1 = np.real(e_obs)
-e2 = np.imag(e_obs)
 
 #e1 = e1_temp + e1_rng
 #e2 = e2_temp + e2_rng
@@ -212,7 +220,8 @@ if "IA" in DIRname:
 	# complex addition of e_obs and e_IA
 	e_obs = (e_IA + e_obs) / (1+ e_IA*np.conj(e_obs))
 
-
+e1 = np.real(e_obs)
+e2 = np.imag(e_obs)
 
 # Convert X,Y (in arcmin) to coords to mask frame (PSm is in deg/pxl)
 X = X/(PSm*60.)

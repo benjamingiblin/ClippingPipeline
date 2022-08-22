@@ -22,12 +22,22 @@ overall_DIR=$PWD
 pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
 data_DIR='/data/bengib/Clipping_SimsLvW/'
 
-source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5 
+if [[ "$5" == *"param_files"* ]]; then
+    # 2 input paramfiles inputted, this means we're combining shear cats for different zbins
+    # assemble the new (combined-redshift) DIRname & filter inputs:
+    source $pipeline_DIR/ShowSumClass/Assemble_Combine-zbin-DIRname.sh $1 $2 $3 $4 $5
+    paramfile=$paramfile1
+else
+    # 1 paramfile inputted, just working with shear cat for single zbin
+    source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
+fi
+
 
 if [ "$RUN" == "Sims_Run" ]; then
-	remove_keyword="*.LOS$los.*"
+    remove_keyword="*.LOS$los.*"
+    remove_keyword2="*LOS"$los"_*"
 else
-	remove_keyword=$Field"*"
+    remove_keyword=$Field"*"
 fi
 
 
@@ -42,7 +52,14 @@ if [ "$RUN" == "KiDS_Run" ]; then
 		$pipeline_DIR/KiDS450_DataGrab.sh $1 $2 $3
 	fi
 elif [ "$sqdeg" == "100" ]; then
-	$pipeline_DIR/KiDSMocks_DataGrab.sh $1 $2 $3 $4 
+    $pipeline_DIR/KiDSMocks_DataGrab.sh $1 $2 $3 $4
+
+    if [[ "$paramfile2" == *"param_files"* ]]; then
+	# a 2nd paramfile (different zbin) has been passed in:
+	$pipeline_DIR/KiDSMocks_DataGrab.sh $1 $paramfile2 $3 $4
+	$pipeline_DIR/Mass_Recon/Concatenate_Shear_Cats.sh $1 $paramfile1 $3 $4 $paramfile2
+    fi
+    
 elif [ "$sqdeg" == "5000" ]; then
 
 	if [ "$ZBcut" == "None" ]; then
@@ -126,7 +143,7 @@ cd $pipeline_DIR
 
 
 # 3. get_clipped_shear.py (<Clipping_K>) 
-python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
+#python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
 if [ $? -eq 1 ]; then
 	echo "$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline."
 	printf "\n$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline." > $pipeline_DIR/Error_Reports/Error_Report.txt
@@ -150,8 +167,16 @@ echo "remove keyword is $remove_keyword for $1 $2 $3 $4"
 	
 # Remove stuff that Athena doesn't use
 removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword"kappa.fits
-rm -f $removal
+#rm -f $removal
 
+
+if [[ "$5" == *"param_files"* ]]; then
+    # !!! NOTE GIBLIN, if 2 paramfiles inputted, I'm assuming here that you are only calc'ing mass maps."
+    # hence, we can delete the concatenated shear cat (otherwise the worker gets full).
+    echo "!!! REMOVING SHEAR CAT WITH KEYWORD $remove_keyword2 : comment these lines out if you intend to calc Corr func's !!!"
+    removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword2".dat
+    rm -f $removal
+fi
 
 
 
