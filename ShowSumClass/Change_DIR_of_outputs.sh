@@ -11,7 +11,7 @@
 
 echo "You are working on ..."
 hostname
-module load intel			# make sure all necessary fortarn libraries are available.
+module load compiler mkl			# make sure all necessary fortarn libraries are available.
 
 
 # Firstly, make $data_DIR if it does not exist

@@ -8,22 +8,22 @@
 # And remove everything left on data_DIR
 
 # End directory
-rsync -avz $data_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/NLOS* $pipeline_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/
+mv $data_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/NLOS* $pipeline_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/
 
 # The individual CFs produced
-rsync -avz $data_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/*.CorrFun.asc $pipeline_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/
+mv $data_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/*.CorrFun.asc $pipeline_DIR/Tree_Correlation_Function/$DIRname/ThBins$ThBins/
 
 # Same again, but for the Correlation_Function directory (used if they used Athena, not TreeCorr)
-rsync -avz $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/NLOS* $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins/
-rsync -avz $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/*.CorrFun.asc $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins/
+mv $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/NLOS* $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins/
+mv $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/*.CorrFun.asc $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins/
 
 # Copy Ekappa maps - useful if you want to do cosmology with the 1-pt PDF(K)
-rsync -avz $data_DIR/Mass_Recon/$DIRname/*Ekappa.fits $pipeline_DIR/Mass_Recon/$DIRname/
+mv $data_DIR/Mass_Recon/$DIRname/*Ekappa.fits $pipeline_DIR/Mass_Recon/$DIRname/
 # Copy smoothed shear maps - useful if you want to see what effect of smoothing is on xi_+-
-#rsync -avz $data_DIR/Mass_Recon/$DIRname/*g*smooth.fits $pipeline_DIR/Mass_Recon/$DIRname/
+#mv $data_DIR/Mass_Recon/$DIRname/*g*smooth.fits $pipeline_DIR/Mass_Recon/$DIRname/
 
 # Copy the clipped and unclipped shear catalogues - useful for calculating the cross-correlations between redshift bins
-rsync -avz $data_DIR/Correlation_Function/$DIRname/*.Std.asc $pipeline_DIR/Correlation_Function/$DIRname/
+mv $data_DIR/Correlation_Function/$DIRname/*.Std.asc $pipeline_DIR/Correlation_Function/$DIRname/
 
 # Remove everything else. 
 #rm -rf $data_DIR/*/$DIRname

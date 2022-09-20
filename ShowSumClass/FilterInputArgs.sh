@@ -61,10 +61,8 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 		source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 		name_start="SN${sigma_e}_"
 		
-	    elif [ $gpam == "3.32" ]; then
+	    else 
 		name_start='SN0.28_'
-	    else
-		name_start='SN0.29_'
 	    fi
 	    DIRname_start='_SNCycle'
 	    
@@ -160,7 +158,7 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 	DIRname="$Prepend$sqdeg"Sqdeg$DIRname_start$DIRname_mid"$gpam"GpAM_z"$z"_ZBcut"$ZBcut$DIRname_end"
 	z=$z$DIRname_end
 	#echo $name
-	echo "DIRname is $DIRname"
+	#echo "DIRname is $DIRname"
 
 
 
