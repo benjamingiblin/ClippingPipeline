@@ -23,9 +23,19 @@ def interpolate2D(X, Y, grid): #(It's linear)
 
 
 def Mask_Shear(X, Y, e1, e2, mask_filename):
-	#print(N)
+	Xi = X.astype(np.int)
+	Yi = Y.astype(np.int) # these round down to integer
+
 	Mask = fits.open(mask_filename)
-	MaskVals_4Extractions = Mask[0].data[Y.astype(np.int), X.astype(np.int)]
+
+	# avoid out of bounds pxls
+	if Yi.max() == Mask[0].data.shape[0]:
+		Yi[ np.where( Yi == Yi.max() )[0] ] = Yi.max()-1
+
+	if Xi.max() == Mask[0].data.shape[1]:
+		Xi[ np.where( Xi == Xi.max() )[0] ] = Xi.max()-1
+
+	MaskVals_4Extractions = Mask[0].data[Yi, Xi]
 	Usable_indi = np.where(MaskVals_4Extractions== 0) 
 	return X[Usable_indi], Y[Usable_indi], e1[Usable_indi], e2[Usable_indi]
 
@@ -240,6 +250,20 @@ def ReBin_CF(theta, CF, npairs, new_bins):
 	return theta_new, CF_new, npairs_new
 
 
+
+def Combine_zbin_DIRname(input_args):
+
+	variable1 = Filter_Input(input_args[:-1])                     # omitting the 2nd paramfile
+	variable2 = Filter_Input(input_args[0:2]+[input_args[-1]]+input_args[3:5])
+
+	variable1.Filter()
+	variable2.Filter()
+
+	name, gpam, DIRname1, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end = variable1.Unpack_Sims()
+	_,_,DIRname2,_,_,SN2,_,_,_,_, zlo2,zhi2,_,_,_,_ = variable2.Unpack_Sims()
+
+	DIRname = DIRname1.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname2.split('ZBcut')[-1]
+	return name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end
 
 
 

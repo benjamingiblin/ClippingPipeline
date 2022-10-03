@@ -236,10 +236,7 @@ class Filter_Input:
 				name_start='SN%s_' %SN_level
                                 
 			else:
-			        if float(gpam) == 3.32:
-				        name_start='SN0.28_'
-			        else:
-				        name_start='SN0.29_'
+			        name_start='SN0.28_' 
                                         
 			DIRname_start='_SNCycle'
 		else:
@@ -345,7 +342,7 @@ class Filter_Input:
 		# e.g. NOISE_Mask, NF_test, SN0.27_Mask etc.
 		DIRname = '%s%sSqdeg%s%s%sGpAM_z%s_ZBcut%s%s' %(Prepend,sqdeg, DIRname_start, DIRname_mid, gpam, z, ZBcut, DIRname_end) 
 		z='%s%s' %(z, DIRname_end)
-		print("DIRname is %s, z is %s" %(DIRname, z))
+		#print("DIRname is %s, z is %s" %(DIRname, z))
 		#e.g. 	60Sqdeg_NF_Mask_8.53GpAM_z0.640
 		#e.g. 	100Sqdeg_SN0.27_NoMask_8.53GpAM_zKiDS_HS8
 
