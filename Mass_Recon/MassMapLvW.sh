@@ -10,12 +10,21 @@
 # NOTE TO SELF: This mass map sets the image dimensions to be that of the mask
 # Ergo your X and Y coords should be in the mask frame.
 
-module load intel
+module load compiler mkl 
 
 #overall_DIR=$PWD
 pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
 data_DIR='/data/bengib/Clipping_SimsLvW/'
-source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
+
+if [[ "$5" == *"param_files"* ]]; then
+    # 2 input paramfiles inputted, this means we're combing shear cats for different zbins
+    # assemble the new (combined-redshift) DIRname & filter inputs:
+    source $pipeline_DIR/ShowSumClass/Assemble_Combine-zbin-DIRname.sh $1 $2 $3 $4 $5
+    paramfile=$paramfile1
+else
+    # 1 paramfile inputted, just working with shear cat for single zbin
+    source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
+fi
 
 
 echo $Field
@@ -112,17 +121,17 @@ do
     # essentially swap e1->-e2 and e2 ->e1
     # run all the same steps
     
-    src/cat2grid_fromasc.a -in \
-	"$combined_name"_Xm_Ym_e1_e2_w.dat \
-		-directory "$inoutdir" -LOS $keyword -nx $nbin1 -ny $nbin2 \
-		-xmax $nbin1 -ymax $nbin2 -xmin 1 -ymin 1 -rot 
+    #src/cat2grid_fromasc.a -in \
+#	"$combined_name"_Xm_Ym_e1_e2_w.dat \
+#		-directory "$inoutdir" -LOS $keyword -nx $nbin1 -ny $nbin2 \
+#		-xmax $nbin1 -ymax $nbin2 -xmin 1 -ymin 1 -rot 
 
     
-	src/massrecon_new.a -directory "$inoutdir" -LOS $keyword -n1 $nbin1 -n2 $nbin2 -gaussian -scale $scale $mask_variable
+#	src/massrecon_new.a -directory "$inoutdir" -LOS $keyword -n1 $nbin1 -n2 $nbin2 -gaussian -scale $scale $mask_variable
 
 
 	# Tidy up the produced FITS maps
-    mv $inoutdir/kapparenorm$keyword.fits $combined_name.SS"$scale".Bkappa.fits
+#    mv $inoutdir/kapparenorm$keyword.fits $combined_name.SS"$scale".Bkappa.fits
 	
 
 	# Remove all the other FITS files made. Just gets messy.
