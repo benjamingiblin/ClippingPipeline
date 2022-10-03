@@ -130,7 +130,7 @@ cd $pipeline_DIR/Mass_Recon/src/
 #find . -type f -exec sed -i "s#/home/cech/cookbook.f90#$address#" {} +
 
 # compile mass recon codes
-module load intel
+module load compiler mkl
 #####ifort cat2grid_fromasc.f90 -o cat2grid_fromasc.a -L/usr/local/share/cfitsio/ -lcfitsio
 ifort cat2grid_fromasc.f90 -o cat2grid_fromasc.a -L/usr/local/share/cfitsio/ -lcfitsio -O0 -CB 
 
