@@ -7,8 +7,8 @@
 
 
 
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'     # If running on a supercomputer, these will be different
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 
 if [[ "$5" == *"param_files"* ]]; then
     # 2 input paramfiles inputted, this means we're combing shear cats for different zbins
@@ -133,7 +133,6 @@ for f in ${Loop_Array[*]}; do
 done
 
 
-
 # rsync all required data to data_DIR if pipeline_DIR != data_DIR
 if [ "$pipeline_DIR" != "$data_DIR" ]; then	source $pipeline_DIR/ShowSumClass/Change_DIR_of_outputs.sh; fi
 
@@ -226,15 +225,7 @@ echo "Time at which pipeline ended: $(date)" >> $timerfile
 
 
 
-
-
-
-
-
-
-
 # 8. Plot the CF averaged across the fields. Give it all the inputs you gave this code.
-
 echo "Executing plot_CorrFun.py"
 #python $pipeline_DIR/Correlation_Function/plot_CorrFun.py $1 $2 $3 $4 $5 $6 $7 
 
@@ -243,8 +234,7 @@ if [ $? -eq 1 ]; then
     echo 'plot_CorrFun.py failed. Exiting Master.'
     exit 1
 else
- 	echo 'plotting ran correctly. Correlation plots and Covariance matrices made!'
-    echo 'Exiting Master'
+ 	echo 'plotting ran correctly: Correlation plots and Covariance matrices made! (Unless its commented out).'
 fi
 
 
@@ -255,8 +245,8 @@ if [ "$pipeline_DIR" != "$data_DIR" ]; then     source $pipeline_DIR/ShowSumClas
 
 if [ "$RUN" == "Sims_Run" ] && [[ $data_DIR == "/data/"* ]]; then
     #rm -rf $data_DIR/Mass_Recon/$DIRname/*_Xm_Ym_e1_e2_w.dat
-    rm -f $data_DIR/Mass_Recon/$DIRname/*SS${SS}*Ekappa.fits
-    #echo "Not deleting catalogue in Mass_Recon this time... do this by hand"
+    #rm -f $data_DIR/Mass_Recon/$DIRname/*SS${SS}*Ekappa.fits
+    echo "Not deleting catalogue in Mass_Recon this time... do this by hand"
 fi
 
 

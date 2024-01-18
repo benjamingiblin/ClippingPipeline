@@ -21,8 +21,8 @@
 
 
 overall_DIR=$PWD
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 
 source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5 
 
@@ -109,8 +109,8 @@ echo "remove keyword is $remove_keyword for $1 $2 $3 $4"
 echo "remove keyword2 is $remove_keyword for $1 $2 $3 $4"
 # Remove stuff that Athena doesn't use
 
-removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword"kappa.fits
-#rm -f $removal
+removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword"Bkappa.npy
+rm -f $removal
 removal=$data_DIR/Mass_Recon/$DIRname/"$remove_keyword2".dat
 rm -f $removal
 

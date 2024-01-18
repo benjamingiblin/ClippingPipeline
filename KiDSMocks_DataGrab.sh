@@ -1,16 +1,12 @@
 #!/bin/bash
 # 26/07/2016 B. M. Giblin, PhD Student, Edinburgh
-# This code is for extracting the shear info from the "KiDS-like" mocks
-# NB 14/11/2016: Make a ZB cut on the mocks; have to if doing so to the data
-# NB will mean that we have < 8.53 gals / arcmin^2 unfortunately. 
-
-
+# This code is for extracting the shear info from the KiDS/LSST-like mocks
 
 
 #overall_DIR=$PWD
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
-SLICS_dataDIR=/data/bengib/Clipping_SimsLvW/SLICS_100/
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
+SLICS_dataDIR='/data/bengib/Clipping_Pipeline//SLICS_100/'
 
 source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
 
@@ -69,6 +65,7 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 		# IA mocks stored in v. different directory:
 		mocks_datadir=/home/jharno/public_html/cosmo-SLICS/data/${cosmol_fname}_${seed}/IA_mocks_smooth05Mpcoverh/
 		filename=GalCatalog_IA_${bin_name}_AIA1.0.dat_LOS${los_fname}
+		
 	    else
 		Tablename="${mocks_datadir}/KiDS1000/GalCatalog..."
 		# infuriatingly, the Tablename for fid has one less '.' than the other cosmols:
@@ -141,7 +138,15 @@ else
     #echo "Reading in this SLICS file: $input"
 fi
 
+
 output=$data_DIR/Mass_Recon/$DIRname/$name."$gpam"GpAM.LOS"$los"_Xm_Ym_e1_e2_w.dat
+if [ ! -d "$data_DIR/Mass_Recon/$DIRname" ]; then
+    # This will only be the case if we're doing KiDS-1000 run no-tomography
+    # in which we do an impromptu scroll through 5 tomo bins.
+    mkdir -p $data_DIR/Mass_Recon/$DIRname
+fi
+
+
 
 if [[ $IA == *"IA"* ]]; then
     # The IA mocks are ascii catalogues (use awk)

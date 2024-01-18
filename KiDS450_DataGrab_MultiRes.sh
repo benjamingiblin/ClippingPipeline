@@ -38,8 +38,8 @@ fi
 
 
 DIRECT=$PWD/Mass_Recon/$Field
-ldactoasc=/home/erben/software/theli-1.18.0/bin/Linux_64/ldactoasc_theli
-sky2xy=/usr/bin/sky2xy
+ldactoasc=/home/cech/software/theli-1.30.0/bin/Linux_64//ldactoasc_theli
+sky2xy=
 output=$DIRECT/$Field.Blind"$Blind"_Xm_Ym_e1_e2_w"$file_endname".dat
 
 

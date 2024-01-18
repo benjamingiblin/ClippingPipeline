@@ -10,8 +10,8 @@
 
 
 #overall_DIR=$PWD
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
 
 
@@ -31,8 +31,8 @@ fi
 
 
 DIRECT=$data_DIR/Mass_Recon/$DIRname
-ldactoasc=/home/erben/software/theli-1.18.0/bin/Linux_64/ldactoasc_theli
-sky2xy=/usr/bin/sky2xy
+ldactoasc=/home/cech/software/theli-1.30.0/bin/Linux_64//ldactoasc_theli
+sky2xy=
 output=$DIRECT/$Field.Blind"$Blind"_Xm_Ym_e1_e2_w.dat
 
 
@@ -41,7 +41,7 @@ output=$DIRECT/$Field.Blind"$Blind"_Xm_Ym_e1_e2_w.dat
 
 
 # Access Catherine's copies of the KiDS-450 data
-kids450_datadir='/data/bengib/Clipping_SimsLvW//KiDS450/'
+kids450_datadir='/data/bengib/Clipping_Pipeline//KiDS450/'
 Field_Data=$kids450_datadir/KiDS_"$Field"_reweight_5x5x5_BLIND_inc_m_v2.cat
 
 

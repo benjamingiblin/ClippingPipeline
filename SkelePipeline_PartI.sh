@@ -9,7 +9,7 @@
 # The scripts involved, in order, are:
 
 #  ------------------------- PART I -------------------------
-# 0. KiDSMocks_DataGrab.sh or KiDS450_DataGrab.sh (KiDS_Run & 100 sqdeg Sims_Run ONLY)
+# 0. KiDSMocks_DataGrab.sh or KiDS450_DataGrab.sh (KiDS_Run & 100 sqdeg Sims_Run ONLY) / KiDSMocks_DataGrab_Mosaic.sh
 # 1. Sims_DataGrab.py
 # 2. Mass_Recon/MassMapLvW.sh 
 # 3. get_clipped_shear.py (<Clipping_K>)
@@ -19,8 +19,8 @@
 # 6. plot_CorrFun.py (<Correlation_Function>) <--- Executed from master.
 
 overall_DIR=$PWD
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 
 if [[ "$5" == *"param_files"* ]]; then
     # 2 input paramfiles inputted, this means we're combining shear cats for different zbins
@@ -40,8 +40,9 @@ else
     remove_keyword=$Field"*"
 fi
 
-
-
+if [[ "$DIRname" == *"Mosaic"* ]]; then
+    codeflag="_Mosaic" # affects which code runs: [KiDSMocks_DataGrab(_Mosaic).sh]
+fi
 
 # 0. KiDS data and 100 sqdeg mocks require an ldactoasc DataGrab:
 if [ "$RUN" == "KiDS_Run" ]; then
@@ -51,13 +52,46 @@ if [ "$RUN" == "KiDS_Run" ]; then
 	else
 		$pipeline_DIR/KiDS450_DataGrab.sh $1 $2 $3
 	fi
+	
 elif [ "$sqdeg" == "100" ]; then
-    $pipeline_DIR/KiDSMocks_DataGrab.sh $1 $2 $3 $4
 
+    if [[ "$z" == *"KiDS1000"* ]] && [ "$zlo" == "0.1" ] && [ "$zhi" == "1.2" ]; then
+	echo " !!! DOING A KiDS-1000 MOCK RUN w/ NO TOMOGRAPHY - CYCLING THROUGH THE zBINS !!! "
+	# Have to run on all tomo bins, then concatenate the resulting cat's.
+	paramfile1=$2
+	source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
+	echo "sigma_e is set to $sigma_e"
+	ZB_array=("0.1-0.3" "0.3-0.5" "0.5-0.7" "0.7-0.9" "0.9-1.2")
+	SN_array=(0.27 0.258 0.273 0.254 0.27)
+	for z_idx in `seq 0 4`; do
+	    echo " -x-x-x- On ZBcut${ZB_array[$z_idx]} -x-x-x-x- "
+	    tmp_paramfile="${paramfile1/ZBcut0.1-1.2/ZBcut${ZB_array[$z_idx]}}"   # replace the ZBcut label
+	    tmp_paramfile="${tmp_paramfile/SN${sigma_e}_/SN${SN_array[$z_idx]}_}"     # replace the SN label	   
+	    $pipeline_DIR/KiDSMocks_DataGrab${codeflag}.sh $1 $tmp_paramfile $3 $4
+	    python $pipeline_DIR/Sims_DataGrab_MM.py $1 $tmp_paramfile $3 $4  # Add shape noise
+	done
+	# Now piece the catalogues together:
+	source $pipeline_DIR/Mass_Recon/Concatenate_Shear_Cats.sh $1 $2 $3 $4
+	python $pipeline_DIR/Mass_Recon/MM_only.py $1 $paramfile $3 $4 
+	echo "...Deleting the saved cats in SLICS_100 directory"
+	#rm -f $data_DIR/SLICS_100/bin*/GalCatalog_LOS${3}.fits
+	# ^ commented out: this could upset other jobs on same worker
+	
+    else	
+	$pipeline_DIR/KiDSMocks_DataGrab${codeflag}.sh $1 $2 $3 $4
+	python $pipeline_DIR/Sims_DataGrab_MM.py $1 $2 $3 $4 $5 # Add in the shape noise
+    fi
+	
     if [[ "$paramfile2" == *"param_files"* ]]; then
 	# a 2nd paramfile (different zbin) has been passed in:
-	$pipeline_DIR/KiDSMocks_DataGrab.sh $1 $paramfile2 $3 $4
+	$pipeline_DIR/KiDSMocks_DataGrab${codeflag}.sh $1 $paramfile2 $3 $4
+	python $pipeline_DIR/Sims_DataGrab_MM.py $1 $paramfile2 $3 $2 $paramfile1
+	
 	$pipeline_DIR/Mass_Recon/Concatenate_Shear_Cats.sh $1 $paramfile1 $3 $4 $paramfile2
+	echo "Now performing the mass mapping on the concatenated catalogue."
+	echo "INPUTS: "
+	echo "$1 $2 $3 $4 $5"
+	python $pipeline_DIR/Mass_Recon/MM_only.py $1 $2 $3 $4 $5
     fi
     
 elif [ "$sqdeg" == "5000" ]; then
@@ -74,27 +108,12 @@ fi
 
 
 if [ $? -eq 1 ]; then
-	echo "$(date): DataGrab for $RUN failed for params: $1 $2 $3 $4. Exiting SkelePipeline"
-	printf "\n$(date): DataGrab for $RUN failed for params: $1 $2 $3 $4. Exiting SkelePipeline" > $pipeline_DIR/Error_Reports/Error_Report.txt
+	echo "$(date): Data grab failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline."
+	printf "\n$(date): Data grab for $RUN failed for params: $1 $2 $3 $4. Exiting SkelePipeline" > $pipeline_DIR/Error_Reports/Error_Report.txt
    	exit 1
 fi
 
-
-	
-
-# 1. Galaxy extraction + masking + adding shape noise (only for SLICS mocks; already done for Mira Titan)
-if [ "$sqdeg" == "100" ] || [ "$sqdeg" == "60" ] || [ "$sqdeg" == "36" ]; then
-	python $pipeline_DIR/Sims_DataGrab.py $1 $2 $3 $4 $5
-fi
-	
-
-if [ $? -eq 1 ]; then
-	echo "$(date): Sims_DataGrab.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline."
-	printf "\n$(date): Sims_DataGrab.py for $RUN failed for params: $1 $2 $3 $4. Exiting SkelePipeline" > $pipeline_DIR/Error_Reports/Error_Report.txt
-   	exit 1
-fi
-
-
+#exit
 
 
 
@@ -119,29 +138,24 @@ fi
 #       locked=1
 #   fi
 #done
-
-
 	
-
 # 2. MassMapLvW.sh (<Mass_Recon>) 
 # You need to change into the Mass_Recon subdir ro run this.
+#cd $pipeline_DIR/Mass_Recon
+#./MassMapLvW.sh $1 $2 $3 $4 $5
 
-cd $pipeline_DIR/Mass_Recon
-./MassMapLvW.sh $1 $2 $3 $4 $5
+#if [ $? -eq 1 ]; then
+#	echo "$(date): MassMapLvW.sh failed for params: $1 $2 $3 $4 $5."
+#	printf "\n$(date): MassMapLvW.sh failed for params: $1 $2 $3 $4 $5." > $pipeline_DIR/Error_Reports/Error_Report.txt
+#	echo 'Exiting SkelePipeline.'
+#	rm -rf $LOCKDIR
+#	exit 1
+#fi
 
-
-if [ $? -eq 1 ]; then
-	echo "$(date): MassMapLvW.sh failed for params: $1 $2 $3 $4 $5."
-	printf "\n$(date): MassMapLvW.sh failed for params: $1 $2 $3 $4 $5." > $pipeline_DIR/Error_Reports/Error_Report.txt
-	echo 'Exiting SkelePipeline.'
-	rm -rf $LOCKDIR
- 	exit 1
-fi
-
-cd $pipeline_DIR
+#cd $pipeline_DIR
 
 
-
+#exit
 # 3. get_clipped_shear.py (<Clipping_K>) 
 #python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
 if [ $? -eq 1 ]; then

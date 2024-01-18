@@ -3,13 +3,13 @@
 # Extract the data from the Mira Titan mocks with KiDS n(z). Already in FITS file format, no healpix map stuff needed.
 
 
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
 
-ldactoasc=/home/erben/software/theli-1.18.0/bin/Linux_64/ldactoasc_theli
-sky2xy=/usr/bin/sky2xy
-MT_datadir='/data/bengib/Clipping_SimsLvW//MiraTitan/'
+ldactoasc=/home/cech/software/theli-1.30.0/bin/Linux_64//ldactoasc_theli
+sky2xy=
+MT_datadir='/data/bengib/Clipping_Pipeline//MiraTitan/'
 
 if [ ! -d "$data_DIR/Mass_Recon/$DIRname" ]; then
     mkdir $data_DIR/Mass_Recon/$DIRname

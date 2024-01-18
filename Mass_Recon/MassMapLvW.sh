@@ -13,8 +13,8 @@
 module load compiler mkl 
 
 #overall_DIR=$PWD
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 
 if [[ "$5" == *"param_files"* ]]; then
     # 2 input paramfiles inputted, this means we're combing shear cats for different zbins
@@ -41,15 +41,20 @@ if [ "$RUN" == "Sims_Run" ]; then
 		fi
 
 		if [ "$getmask" == "Mask" ] || [ "$getmask" == "G9Mask" ] ; then
-		    G9mask_datadir='/data/bengib/Clipping_SimsLvW//KiDS450/'
+		    G9mask_datadir='/data/bengib/Clipping_Pipeline//KiDS450/'
 		    mask=$G9mask_datadir/G9Mask.$MRres."$sqdeg"deg2.fits
+		elif [[ "$DIRname" == *"Mosaic"* ]]; then
+		    # Get the R region
+		    R=${los#*R}
+		    R=${R%n*}
+		    mask=/home/bengib/KiDS1000_Data/Masks_SLICS_Regions/Mask_KiDS1000_R${R}_Filter12.5_${MRres}.fits
 		else
-		    W3mask_datadir='/data/bengib/Clipping_SimsLvW//WMAP_Masks/'
+		    W3mask_datadir='/data/bengib/Clipping_Pipeline//WMAP_Masks/'
 	       	    mask=$W3mask_datadir/W3.16bit.$MRres.reg.Now_"$sqdeg"sqdeg.fits
 		fi
 	
 	else 	# running with Mira Titan
-		MT_datadir='/data/bengib/Clipping_SimsLvW//MiraTitan/'
+		MT_datadir='/data/bengib/Clipping_Pipeline//MiraTitan/'
 		mask=$MT_datadir/NSIDE"$MRres"/MiraTitan_LOS"$los"_Mask.fits
 	fi
 
@@ -63,7 +68,7 @@ else
 		MRres="arcmin" # make sure it matches the name of the mask file
 	fi
 	mask_startname=$(echo ${Field%_*}) # In case it is a noise run, get the G* part.
-	kids450mask_datadir='/data/bengib/Clipping_SimsLvW//KiDS450/'
+	kids450mask_datadir='/data/bengib/Clipping_Pipeline//KiDS450/'
 	mask=$kids450mask_datadir/$mask_startname.16bit.$MRres.AIT.reg2.fits 
 	keyword=$Field
 	combined_name=$data_DIR/Mass_Recon/$DIRname/$Field.Blind$Blind
@@ -99,7 +104,7 @@ do
     # The format of the input ascii file must be:
 	# x1, x2, e1, e2, weight
 
-    src/cat2grid_fromasc.a -in \
+    src/cat2grid_fromasc -in \
 	"$combined_name"_Xm_Ym_e1_e2_w.dat \
 		-directory "$inoutdir" -LOS $keyword -nx $nbin1 -ny $nbin2 \
 		-xmax $nbin1 -ymax $nbin2 -xmin 1 -ymin 1
@@ -107,7 +112,7 @@ do
       
 
 	# Mass reconstruction to create the kappa map
-    src/massrecon_new.a -directory "$inoutdir" -LOS $keyword -n1 $nbin1 -n2 $nbin2 -gaussian -scale $scale $mask_variable
+    src/massrecon_new -directory "$inoutdir" -LOS $keyword -n1 $nbin1 -n2 $nbin2 -gaussian -scale $scale $mask_variable
 
 	
 	# Above line makes something called kapparenorm.fits
@@ -133,9 +138,7 @@ do
 	# Tidy up the produced FITS maps
 #    mv $inoutdir/kapparenorm$keyword.fits $combined_name.SS"$scale".Bkappa.fits
 	
-
-	# Remove all the other FITS files made. Just gets messy.
-	rm -f $inoutdir/*$keyword.fits
+    rm -f $inoutdir/*$keyword.fits
 
 	
 done
