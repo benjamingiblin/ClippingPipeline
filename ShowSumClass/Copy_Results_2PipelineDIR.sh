@@ -18,12 +18,16 @@ mv $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/NLOS* $pipeline_DIR/Cor
 mv $data_DIR/Correlation_Function/$DIRname/ThBins$ThBins/*.CorrFun.asc $pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins/
 
 # Copy Ekappa maps - useful if you want to do cosmology with the 1-pt PDF(K)
-mv $data_DIR/Mass_Recon/$DIRname/*Ekappa.fits $pipeline_DIR/Mass_Recon/$DIRname/
+echo "Copying the kappa maps"
+rsync -avz $data_DIR/Mass_Recon/$DIRname/*Ekappa.npy $pipeline_DIR/Mass_Recon/$DIRname/
 # Copy smoothed shear maps - useful if you want to see what effect of smoothing is on xi_+-
 #mv $data_DIR/Mass_Recon/$DIRname/*g*smooth.fits $pipeline_DIR/Mass_Recon/$DIRname/
 
 # Copy the clipped and unclipped shear catalogues - useful for calculating the cross-correlations between redshift bins
-mv $data_DIR/Correlation_Function/$DIRname/*.Std.asc $pipeline_DIR/Correlation_Function/$DIRname/
+rsync -avz $data_DIR/Correlation_Function/$DIRname/*.Std.asc $pipeline_DIR/Correlation_Function/$DIRname/
+
+# Copy the clipped and unclipped shear catalogues - useful for calculating the cross-correlations between redshift bins
+rsync -avz $data_DIR/Correlation_Function/$DIRname/*.Std.asc $pipeline_DIR/Correlation_Function/$DIRname/
 
 # Remove everything else. 
 #rm -rf $data_DIR/*/$DIRname
