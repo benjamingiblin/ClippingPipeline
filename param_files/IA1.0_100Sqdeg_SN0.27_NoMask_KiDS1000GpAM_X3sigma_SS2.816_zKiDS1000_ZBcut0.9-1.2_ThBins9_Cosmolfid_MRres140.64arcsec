@@ -1,0 +1,18 @@
+KiDS1000		# number of gals/arcmin^2
+2.816 			# F-scale in pixels (i.e. smoothing scale*sqrt(2))
+X3 				# The clip threshold (see Clipping_K/Clip_Thresholds)
+0.27 			# The intrinsic ellipticity of galaxies (if non-zero, it's the sigma of Gaussian from which SN is sampled).
+				# Set SN to 'ALL' for a noise-ONLY run.
+nomask			# Whether masking is to be included or omitted.
+KiDS1000 		# The redshift of the lenses: theory curve must be saved as xi_<p or m>_smith03revised_z<z>
+0.00129115558			 	# Pixel scale of the mocks (deg/pxl)
+100				# Angular size of the mocks
+fid				# Cosmology. For DH10, 0-157, for SLICS fig, high_sigma8, low_sigma8
+0.9			# zlow: lower limit on zB cut. For no zB cut, put anything that isn't a number
+1.2			# zhigh: upper limit on zB cut. For no zB cut, put anything that isn't a number	
+9			# The number of theta bins used by Athena
+140.64arcs		        # Mass Recon resolution. 5arcs is the fiducial setting for Mocks. 
+			# Alternative value could '1arcmin': must match term appearing in maskname, e.g. W3.16bit.1arcmin.reg.Now_100sqdeg.fits
+			# All alternatives to '5arcs' must be in arcmin
+0.02		# OATH for use in athena
+IA1.0                   # Intrinsic keyword: IA<amplitude>
