@@ -112,7 +112,7 @@ Binning_Fine_Coarse = "Coarse"
 
 # ------------------------------------------------------------------------ #   
 
-mock_Type = 'SLICS'    # 'cosmoSLICS' 'SLICS'
+mock_Type = 'cosmoSLICS'    # 'cosmoSLICS' 'SLICS'
 Survey = 'KiDS1000'    # 'LSST' 'KiDS1000'
 Mask = 'Mosaic'        # "Mosaic' 'NoMask'
 Read_IA = False        # if True read the measurements for the (fid-cosmol) IA-contam. measurements
@@ -125,7 +125,7 @@ Make_Data_Vec = False   # If True,
                        # to make something with the noise levels of KiDS1000
 Data_Vec_batch = 4     # The batch of LOS to avg (0=0:10, 1=10:20, 2=20:30, ...)
 MRres = '140.64arcs'
-SS = [2.816,5.631] # (1.408, 2.816, 5.631), (3.11, 9.33, 18.66, 84.85)
+SS = [2.816] # (1.408, 2.816, 5.631), (3.11, 9.33, 18.66, 84.85)
 
 # binning scheme for the PDF
 nbins_coarse = 4
@@ -223,6 +223,10 @@ len_PDF_array = nbins*len(SS)*dir_cycle
 Regions = 18
 PDF = np.zeros([ Realisations, len_PDF_array ])
 PDF_avg = np.zeros( len_PDF_array )
+# curious, what do kappa (not SNR) PDFs look like?
+PDF_k = np.zeros([ Regions, Realisations, len_PDF_array ])
+PDF_k_avg = np.zeros([ Regions, len_PDF_array ])
+use_bins_kappa = np.linspace(-0.04,0.04,nbins+1)
 
 # also calculate and store the cumulative PDF
 cumPDF = np.zeros_like( PDF )
@@ -320,8 +324,13 @@ for ss in range(len(SS)):
 
                                 for i in range(len(filenames_s)):  # scroll through LOS
                                         #print( "Reading in file %s of %s"%(i,len(filenames_s)) )
-                                        data = np.load(filenames_s[i]) / Noise_std  # read map & convert to SNR
 
+                                        data = np.load(filenames_s[i])   # read map once & do kappa PDF
+                                        #PDF_k[R-1, i, index*nbins:(index+1)*nbins ],_ = np.histogram(np.ndarray.flatten(data[data!=0.]),
+                                         #                                                            use_bins_kappa,
+                                         #                                                            density=False)
+
+                                        data = np.load(filenames_s[i]) / Noise_std # read map & convert to SNR 
                                         # Set density to False, so we just get raw number of pxls, (acts as a weight). 
                                         tmp_pdf,_ = np.histogram(np.ndarray.flatten(data[data!=0.]), use_bins, density=False)
                                         # rm mask spike:
@@ -333,6 +342,7 @@ for ss in range(len(SS)):
                                         # sum the PDFs across regions for given LOS:
                                         PDF[i, index*nbins:(index+1)*nbins ] += tmp_pdf
 
+                                #PDF_k_avg[R-1,:] = np.mean(PDF_k[R-1, :, index*nbins:(index+1)*nbins ], axis=0)
                         # ------------------------- FINISHED SCROLLING THROUGH R REGIONS ------------------------- #
                                         
                          # Avg the summed PDFs (where the sum is over 18 regions) across all the LOS.

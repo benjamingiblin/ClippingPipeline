@@ -224,15 +224,17 @@ class Filter_Input:
 			name_start = 'NOISE_'
 			DIRname_start='_NOISE'
 		elif 'Cycle' in SN or 'cycle' in SN:
-
 			# Set the noise level (not specified in param_file if doing Cycle):
 			if 'KiDS1000' in str(gpam):
-				# Must set SN to values measured in each KiDS1000 bin.
-				bin_edges = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.2])
-				sigma_e_values = [0.270, 0.258, 0.273, 0.254, 0.270]
-				# Note: this only works for the 5 zbins used for cosmic shear.
-				idx_sig = np.where(float(zlo) == bin_edges)[0][0]
-				SN_level = sigma_e_values[idx_sig]
+				if float(zlo)==0.1 and float(zhi)==1.2:
+					SN_level=0.265
+				else:
+					# Must set SN to values measured in each KiDS1000 bin.
+					bin_edges = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.2])
+					sigma_e_values = [0.270, 0.258, 0.273, 0.254, 0.270]
+					# Note: this only works for the 5 zbins used for cosmic shear.
+					idx_sig = np.where(float(zlo) == bin_edges)[0][0]
+					SN_level = sigma_e_values[idx_sig]
 				name_start='SN%s_' %SN_level
                                 
 			else:
@@ -266,8 +268,11 @@ class Filter_Input:
 		elif mask == 'W3mask':
 			name_end='W3Mask'
 			DIRname_mid='_W3Mask_'
+		elif 'mosaic' in mask or 'Mosaic' in mask:
+			name_end='Mosaic'
+			DIRname_mid='_Mosaic_'
 		else:
-			print("mask variable in paramfile must be 'mask' or 'nomask'. Please fix this.")
+			print("mask variable in paramfile is set to %s; not a valid option! Please fix this." %mask)
 			sys.exit(1)
 
 		# Check if high/low sigma 8
@@ -374,6 +379,14 @@ class Format_2Darray:
 		self.mapp = np.c_[extra_cols, self.mapp] # add on the start
 		self.mapp = np.c_[self.mapp, extra_cols] # add on the end
 
+		# rounding of num extra row/cols to intg can mean end map is 1pxl too small:
+		if self.mapp.shape[0] == new_sizeY-1:
+			# need an extra row, add to the bottom
+			self.mapp = np.r_[ self.mapp, np.zeros([1,self.mapp.shape[1]])+number ]
+		if self.mapp.shape[1] == new_sizeX-1:
+			# need an extra column, add it on the right side
+			self.mapp = np.c_[ self.mapp, np.zeros([self.mapp.shape[0],1])+number ]
+		        
 		return self.mapp
 
 

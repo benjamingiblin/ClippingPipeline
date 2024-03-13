@@ -1,17 +1,19 @@
 #!/bin/bash
 
-#SBATCH --array=1-100
+#SBATCH --array=1-322
 #SBATCH -n 2
 #SBATCH -p all
 #SBATCH -t 7-00:00
-#SBATCH --job-name=CosmoSLICS_PDFs_0-9
+#SBATCH --job-name=SLICS_PDFs
 #SBATCH --requeue
 #SBATCH --mail-type=ALL
-#SBATCH --constraint="3TBdatadisk"
+#SBATCH --constraint=datadisk
 #SBATCH --mem=25000
 
+# ! GIBLIN ! MAKE SURE YOU CHANGE THE ARRAY NUM AT TOP TO NUM-ROWS IN CONFIG
+
 # Specify the path to the config file
-config=config_cross2_RAND.txt 
+config=config_cross_S.txt_rand
 
 # Extract the paramfile for the current $SLURM_ARRAY_TASK_ID
 paramfile=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $2}' $config)
@@ -21,15 +23,26 @@ los_end=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $4}' $
 # 2nd paramfile
 paramfile2=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $5}' $config)
 
+# JOB OPTIONS:
+#python Correlation_Function/plot_CorrFun.py Sims_Run $paramfile $los_start $los_end  
+#./Master_CorrFun_ByParts.sh Sims_Run $paramfile $los_start $los_end
+./Master_CorrFun_ByParts.sh Sims_Run $paramfile $los_start $los_end $paramfile2 
+
+
+# this is the one for Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh
+#paramfile1=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $2}' $config)
+#paramfile2=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $3}' $config)
+#los_start=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $4}' $config)
+#los_end=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $5}' $config)
+#R_start=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $6}' $config)
+#R_end=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $7}' $config)
+#./Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end $R_start $R_end
+
+
+
 # TEST TO MAKE SURE JOB ARRAY WORKS:
 # Print to a file a message that includes the current $SLURM_ARRAY_TASK_ID,
 # the paramfile, los_start and los_end 
 #echo "This is array task ${SLURM_ARRAY_TASK_ID}, the paramfile is ${paramfile} and los_start,end is ${los_start},${los_end}." >> output${SLURM_ARRAY_TASK_ID}.txt
 
-#python Correlation_Function/plot_CorrFun.py Sims_Run $paramfile $los_start $los_end
-#./Master_CorrFun_ByParts.sh Sims_Run $paramfile $los_start $los_end
-./Master_CorrFun_ByParts.sh Sims_Run $paramfile $los_start $los_end $paramfile2
 
-
-###########################SBATCH --mail-user=bengib@roe.ac.uk 
-###########SBATCH -o log_Cosmol${i}.out 

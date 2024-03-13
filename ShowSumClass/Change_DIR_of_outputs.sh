@@ -8,7 +8,6 @@
 # There is a LOCKDIR part to this so that you do not have lots of workers trying to copy data simulataneously,
 # as this will only freeze up the connextors from workers - head - storage.
 
-
 echo "You are working on ..."
 hostname
 module load compiler mkl			# make sure all necessary fortarn libraries are available.
@@ -44,10 +43,13 @@ fi
 KiDS_Data_DIR=/home/bengib/KiDS450/
 KiDS_Mask_DIR=/home/bengib/KiDS450/
 	
-SLICS_KV450_DIR=/disk10/jharno/MockProducts/KV450/
-SLICS_KiDS1000_DIR=/disk10/jharno/MockProducts/KiDS1000/
-SLICS_Generic_DIR=/disk10/jharno/MockProducts/Generic/
+SLICS_KV450_DIR='/disk10/jharno/MockProducts/KV450/'
+SLICS_KiDS1000_DIR='/disk10/jharno/MockProducts/KiDS1000/'
+SLICS_Mosaic_DIR='/disk10/jharno/PeakCount/Mocks/Cov_KiDS1000/SLICS_Angus/'
+SLICS_Generic_DIR='/disk10/jharno/MockProducts/Generic/'
+
 cosmoSLICS_DIR=/home/jharno/Projects/cosmoSLICS/
+cosmoSLICS_Mosaic_DIR=/disk10/jharno/PeakCount/Mocks/Cosmo_KiDS1000_Angus_m/
 	
 G9_Mask_DIR=/home/bengib/KiDS450/
 W3_Mask_DIR=/home/bengib/WMAP_Masks/
@@ -60,8 +62,8 @@ DH10_DIR=/home/bengib/DH10_Mocks/FaLCoNS/
 KiDS_Data_dataDIR=$data_DIR/KiDS450/
 KiDS_Mask_dataDIR=$data_DIR/KiDS450/
 
-SLICS_dataDIR=$data_DIR/SLICS_100/
-cosmoSLICS_dataDIR=$data_DIR/cosmoSLICS/
+SLICS_dataDIR='/data/bengib/Clipping_Pipeline//SLICS_100/'
+cosmoSLICS_dataDIR='/data/bengib/Clipping_Pipeline//SLICS_100/'
 
 G9_Mask_dataDIR=$data_DIR/KiDS450/
 W3_Mask_dataDIR=$data_DIR/WMAP_Masks/
@@ -124,7 +126,9 @@ if [ "$RUN" == "Sims_Run" ]; then
 		# Now, which seeds to copy?
 		# rsync necessary los
 		for l in ${Loop_Array[*]}; do
-		    l=${l%n*} # strip off an "n.." just in case it's a noise realisation (e.g. 0n0)
+		    # In case this is a mosaic or noise run, remove extra tags:
+		    l=${l%R*} # strip off the "R.."
+		    l=${l%n*} # strip off an "n.." 
 		    if [ "$l" -lt "26" ]; then
 			seed="a"
 			los_fname=$l
@@ -132,9 +136,9 @@ if [ "$RUN" == "Sims_Run" ]; then
 			seed="f"
 			los_fname=$((l-25))
 		    fi
-		    tmp_cosmoSLICS_dataDIR=$cosmoSLICS_dataDIR/${cosmol_fname}_${seed}/GalCat/KV450/GalCat/
-		    tmp_cosmoSLICS_DIR=$cosmoSLICS_DIR/${cosmol_fname}_${seed}/GalCat/KV450/GalCat/
-		    # note these lines aren't necessary - access cosmoSLICS cats directly in KiDSMocks_DataGrab.sh  
+		    # note these lines aren't necessary - access cosmoSLICS cats directly in KiDSMocks_DataGrab.sh
+		    #tmp_cosmoSLICS_dataDIR='/data/bengib/Clipping_Pipeline//SLICS_100/'
+		    #tmp_cosmoSLICS_DIR=$cosmoSLICS_DIR/${cosmol_fname}_${seed}/GalCat/KV450/GalCat/
 		    #if [ ! -d "$tmp_cosmoSLICS_dataDIR" ]; then mkdir -p $tmp_cosmoSLICS_dataDIR; fi
 		    #rsync -avz $tmp_cosmoSLICS_DIR/GalCatalog_LOS_cone${los_fname}.fits $tmp_cosmoSLICS_dataDIR/ 
 		done
@@ -145,25 +149,51 @@ if [ "$RUN" == "Sims_Run" ]; then
 		if [[ "$z" == *"KiDS"* ]]; then
 		    # it's KiDS-like SLICS. If z is 'KiDS1000' then it's KiDS1000 mocks. Else it's just plain old KV450.
 		    if [ "$z" == "KiDS1000" ]; then
-			SLICS_KiDS_DIR=${SLICS_KiDS1000_DIR}
+			if [[ "$DIRname" == *"Mosaic"* ]]; then
+			    SLICS_KiDS_DIR=${SLICS_Mosaic_DIR}
+			else
+			    SLICS_KiDS_DIR=${SLICS_KiDS1000_DIR}
+			fi
+			
 			
 			# But which redshift bin? JHD's directories for KiDS-1000 are different for each zbin:		       
 			source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
-			SLICS_KiDS_DIR+="/$bin_name"
-			SLICS_dataDIR+="/$bin_name"
-			fname_tag="KiDS1000_${bin_name}"
+			if [ "$zlo" == "0.1" ] && [ "$zhi" == "1.2" ]; then
+			    # we need to cycle through the K1000 zbins!
+			    bin_names=("bin1" "bin2" "bin3" "bin4" "bin5")
+			else
+			    # we're accessing a specific bin:
+			    bin_names=("$bin_name")
+			fi
+			
 						
 		    else
 			# Use the KV450 version of SLICS:
 			fname_tag="KV450"
 			SLICS_KiDS_DIR=${SLICS_KV450_DIR}
+			bin_names=("/") # dummy array, just so loop below activates.
 		    fi
-		    
-		  		 
-		    if [ ! -d "$SLICS_dataDIR" ]; then mkdir -p $SLICS_dataDIR; fi
-		    # rsync necessary los
-		    for l in ${Loop_Array[*]}; do rsync -avz $SLICS_KiDS_DIR/GalCatalog_${fname_tag}_LOS$l.fits $SLICS_dataDIR/GalCatalog_LOS$l.fits ; done
+		    		 
+		    ###if [ ! -d "$SLICS_dataDIR" ]; then mkdir -p $SLICS_dataDIR; fi
 
+		    # rsync necessary los
+		    if [[ "$DIRname" == *"Mosaic"* ]]; then
+			echo "Not copying catalogue - will access directly in KiDSMocks_DataGrab_Mosaic.sh"
+		    else
+					    
+			for b in ${bin_names[*]}; do
+			    tmp_SLICS_KiDS_DIR=${SLICS_KiDS_DIR}/$b
+			    tmp_SLICS_dataDIR=${SLICS_dataDIR}/$b
+			    if [ ! -d "$tmp_SLICS_dataDIR" ]; then mkdir -p $tmp_SLICS_dataDIR; fi
+			
+			    for l in ${Loop_Array[*]}; do
+				if [ "$z" == "KiDS1000" ]; then fname_tag="KiDS1000_${b}"; fi
+				rsync -avz $tmp_SLICS_KiDS_DIR/GalCatalog_${fname_tag}_LOS$l.fits $tmp_SLICS_dataDIR/GalCatalog_LOS$l.fits
+			    done
+			done
+		    fi
+
+		    
 		elif [[ "$z" == *"LSST"* ]]; then
 		    # It's Generic (LSST-like) SLICS
 		    if [ ! -d "$SLICS_dataDIR" ]; then mkdir -p $SLICS_dataDIR; fi

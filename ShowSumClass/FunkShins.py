@@ -2,16 +2,33 @@ import numpy as np
 from astropy.io import fits
 import time
 import os
+from scipy.stats import binned_statistic_2d
 from ClassWarfare import Filter_Input, Format_2Darray
 # These classes are used by the Kappa2Shear function
 
 
+def MeanQ_VS_XY(Q, w, m, X,Y,num_XY_bins):
+        # we want the weighted mean of Q and also calibrated.
+        # Calculate the sum 2D binned value of Q*w and m*w, and then divide
+        sumQw_grid, yedges, xedges, binnum = binned_statistic_2d(Y, X, Q*w, statistic='sum', bins=num_XY_bins)
+        sum_mw_grid, yedges, xedges, binnum = binned_statistic_2d(Y, X, m*w, statistic='sum', bins=num_XY_bins)
+        AvQ_grid=sumQw_grid/sum_mw_grid
 
+        # Correct bad pixels
+        bad_pxls = np.where( np.isfinite(AvQ_grid) == False )
+        AvQ_grid[bad_pxls[0], bad_pxls[1]] = 0.
+        return AvQ_grid,yedges,xedges,bad_pxls
+        
 
 
 def interpolate2D(X, Y, grid): #(It's linear)
-	Xi = X.astype(np.int)
-	Yi = Y.astype(np.int) # these round down to integer
+	Xi = np.int64(X) 
+	Yi = np.int64(Y) # these round down to integer
+
+	# if any pxl exceeds grid, or is at the egde of grid
+        # shift it in 2 pxls, so we can interpolate from this to boundary
+	Xi[Xi >= grid.shape[1]-1] = grid.shape[1]-2 # (-2 so Xi+1 below runs okay).
+	Yi[Yi >= grid.shape[0]-1] = grid.shape[0]-2
 
 	VAL_XYlo = grid[Yi, Xi] + (X - Xi)*( grid[Yi, Xi+1] - grid[Yi, Xi] )
 	VAL_XYhi = grid[Yi+1,Xi] + (X - Xi)*( grid[Yi+1,Xi+1] - grid[Yi+1, Xi] )
@@ -164,11 +181,11 @@ def Sort_Array_IntoGroups(CF_array, groups):
 
 # Read in the name of a mask + its resolution in arcmin, calculate the area and the unmasked area
 def Calc_Unmasked_Area(mask_name, res_in_arcmin):    
-    mask = fits.open(mask_name)
-    No_Pxls = (len(mask[0].data[0,:])*len(mask[0].data[:,0]))
-    Tot_Area = No_Pxls * (float(res_in_arcmin)/60.)**2.
-    Unmasked_Frac = 1. - float(len(np.where(mask[0].data > 0)[0])) / No_Pxls
-    return Unmasked_Frac, Tot_Area
+	mask = fits.open(mask_name)
+	No_Pxls = (len(mask[0].data[0,:])*len(mask[0].data[:,0]))
+	Tot_Area = No_Pxls * (float(res_in_arcmin)/60.)**2.
+	Unmasked_Frac = 1. - float(len(np.where(mask[0].data > 0)[0])) / No_Pxls
+	return Unmasked_Frac, Tot_Area
 
 
 
@@ -251,20 +268,27 @@ def ReBin_CF(theta, CF, npairs, new_bins):
 
 
 
+
 def Combine_zbin_DIRname(input_args):
+ 	# This func correctly assembles DIRname irrespective of which cat (hi/lo) is inputted first
+ 	# and otherwise returns data corresponding to the 1st catalogue (A)
+ 	variableA = Filter_Input(input_args[:-1])                     # omitting the 2nd paramfile
+ 	variableB = Filter_Input(input_args[0:2]+[input_args[-1]]+input_args[3:5])
 
-	variable1 = Filter_Input(input_args[:-1])                     # omitting the 2nd paramfile
-	variable2 = Filter_Input(input_args[0:2]+[input_args[-1]]+input_args[3:5])
+ 	variableA.Filter()
+ 	variableB.Filter()
 
-	variable1.Filter()
-	variable2.Filter()
+ 	name, gpam, DIRnameA, SS, sigma, SN, mask, z, PS, sqdeg, zlo_A, zhi_A, ThBins, OATH, los, los_end = variableA.Unpack_Sims()
+ 	_,_,DIRnameB,_,_,SN2,_,_,_,_, zlo_B,zhi_B,_,_,_,_ = variableB.Unpack_Sims()
 
-	name, gpam, DIRname1, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end = variable1.Unpack_Sims()
-	_,_,DIRname2,_,_,SN2,_,_,_,_, zlo2,zhi2,_,_,_,_ = variable2.Unpack_Sims()
+ 	# check which DIRname corresponds to the lower redshift bin.
+ 	# need this info to correctly assemble the DIRname, so the lower zbin-info is always first.
+ 	if float(zlo_A) < float(zlo_B):  # Low-z paramfile is first
+ 		DIRname1,DIRname2 = DIRnameA,DIRnameB
+ 		zlo,zhi = zlo_A,zhi_A
+ 	else:                            # High-z paramfile is first
+ 		DIRname1,DIRname2 = DIRnameB,DIRnameA
+ 		zlo,zhi = zlo_B,zhi_B
 
-	DIRname = DIRname1.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname2.split('ZBcut')[-1]
-	return name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end
-
-
-
-
+ 	DIRname = DIRname1.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname2.split('ZBcut')[-1]
+ 	return name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo_A, zhi_A, ThBins, OATH, los, los_end

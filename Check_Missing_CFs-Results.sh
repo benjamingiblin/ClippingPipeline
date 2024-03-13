@@ -40,13 +40,14 @@ else
     missing_los=(135 140 449 595 596 597 598 601 610 614 735)
 fi
 
-ZBcut=("0.1-0.3" "0.3-0.5" "0.5-0.7" "0.7-0.9" "0.9-1.2")
-#ZBcut=("0.1-1.2")
+
+#ZBcut=("0.1-0.3" "0.3-0.5" "0.5-0.7" "0.7-0.9" "0.9-1.2")
+ZBcut=("0.1-1.2")
 
 # KiDS1000 mocks
 Survey="KiDS1000"
-SN=(0.27 0.258 0.273 0.254 0.27)
-#SN=(0.265)
+#SN=(0.27 0.258 0.273 0.254 0.27)
+SN=(0.265)
 
 # LSST mocks
 #Survey="LSST"
@@ -64,21 +65,21 @@ RR_end=18
 RR=2       # region; used if working with mosaic mocks
 
 count=0
-for file_type in "SS${SS}.rCLIP_X3sigma.CorrFun.asc"; do # "ORIG.CorrFun.asc"; do
+for file_type in "SS${SS}.rCLIP_X3sigma.CorrFun.asc" "ORIG.CorrFun.asc"; do
     echo " FILE_TYPE: $file_type "
-#for i in fid; do
-for i in `seq 0 24`; do   
+for i in fid; do
+#for i in `seq 0 24`; do   
     echo "--------------------------- COSMOL $i ----------------------------------------"
-    for j in `seq 0 4`; do
+    for j in `seq 0 0`; do
 	jp1=$((j+1));
 	echo " xxxxxxxxxxxxxxxxxxxxxxx ${ZBcut[$j]} xxxxxxxxxxxxxxxxxxxxxx";
-	for k in `seq $jp1 4`; do  # $j 4
+	for k in `seq $j $j`; do  # $j 4
 
 	    if [ "$j" -eq "$k" ]; then ZBlabel=ZBcut${ZBcut[$j]}; else ZBlabel=ZBcut${ZBcut[$j]}_X_ZBcut${ZBcut[$k]}; fi
 	    
 	    for los in `seq $los_start $los_end`; do
 		#for nn in `seq $nn_start $nn_end`; do
-		#for RR in `seq $RR_start $RR_end`; do 
+		for RR in `seq $RR_start $RR_end`; do 
 		
 		    # This line skips the missing SLICS los
 		    for item in ${missing_los[*]}; do if [[ "$los" -eq "$item" ]]; then los=$((los+1)); fi; done
@@ -134,7 +135,8 @@ for i in `seq 0 24`; do
 				    
 			    if [ "$j" -eq "$k" ]; then
 				# auto-bin
-				sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
+				#sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
+				sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh ${paramfile1}_tmp${r} ${paramfile2}_tmp${r} $los $los$RR $RR
 			    else
 				# cross-bin
 				#sbatch Launch.sh ${paramfile1}_tmp${r} $los $los # if the *.asc cat doesnt exist
@@ -148,16 +150,16 @@ for i in `seq 0 24`; do
 			    echo $f
 			    echo $i ${SN[$j]} ${ZBcut[$j]} ${SN[$k]} ${ZBcut[$k]} ${SS} ${los}R${RR} #${los_end}
 			    count=$((count+1))
-			    if [ "$j" -eq "$k" ]; then
+			    #if [ "$j" -eq "$k" ]; then
 				# auto-bin
 				#sbatch Launch.sh $paramfile1 $los $los
-				sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los $los
-			    else
+				#sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los $los
+			    #else
 				# cross-bin
 			    	#sbatch Launch.sh $paramfile1 $los $los
 				#sbatch Launch.sh $paramfile2 $los $los
-				sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2	$los $los
-			    fi
+				#sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2	$los $los
+			    #fi
 			    
 			    #break # stop scrolling through LOS now you found a missing one for this cosmol & zbin
 			fi
@@ -165,11 +167,11 @@ for i in `seq 0 24`; do
 		    fi
 	    done
 	    #sbatch Launch.sh $paramfile1 $los_start $los_end
-	    ls $paramfile1
-	    ls $paramfile2
-	    sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end
+	    #ls $paramfile1
+	    #ls $paramfile2
+	    #sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end
 	    #python Correlation_Function/plot_CorrFun.py Sims_Run $paramfile1 $los_start $los_end $paramfile2
-	    #done
+	    done
 	done
     done
 done

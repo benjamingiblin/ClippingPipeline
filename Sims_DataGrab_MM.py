@@ -217,6 +217,9 @@ else:
 # 28/05/2019 - edit to do more accurate contribution of SN to e_obs:
 # e = e1 + j*e2
 e_rng = e1_rng + 1j*e2_rng     # noise
+if 'Mosaic' in DIRname:
+        print("Mosaic mocks require an extra e2 sign flip; applying it here.")
+        e2_temp *= -1.
 e_temp = e1_temp + 1j*e2_temp  # shear
 
 # complex addition of shear and noise:
@@ -246,7 +249,6 @@ if "IA" in DIRname:
 e1 = np.real(e_obs)
 e2 = np.imag(e_obs)
 
-                 
 if 'Mosaic' in DIRname:
 	# Use the WCS in the mask to convert RA,Dec [in deg] to X,Y pxl coords
 	from astropy.wcs import WCS
@@ -299,7 +301,7 @@ if 'Mosaic' in DIRname:
 	# not sure the bin2d stat works well with masks! manually 2d yourself!
 	from FunkShins import MeanQ_VS_XY
 	e1map,_,_,bad_pxls = MeanQ_VS_XY(e1, Weight, np.ones_like(e1), X,Y,(new_sizeY,new_sizeX))
-	e2map,_,_,bad_pxls = MeanQ_VS_XY(e2, Weight, np.ones_like(e1), X,Y,(new_sizeY,new_sizeX))
+	e2map,_,_,bad_pxls = MeanQ_VS_XY(e2, Weight, np.ones_like(e2), X,Y,(new_sizeY,new_sizeX))
 else:
 	e1map, e2map = bin2d(X, Y, v=(e1,e2), w=Weight, npix=(new_sizeX,new_sizeY), extent=None)
 	# use extent to set mask boundaries (if mosaic mocks) 
@@ -317,7 +319,7 @@ pad_size = 2 * max(new_sizeX,new_sizeY)
 pad_X = int((pad_size - new_sizeX)/2) # num. of rows to add on each side
 pad_Y = int((pad_size - new_sizeY)/2) # num. cols to add on each side
 pad_e1map_sm = np.pad( e1map_sm, ((pad_Y, pad_Y),(pad_X, pad_X)), mode='constant')  # pad e1 map with zeros   
-pad_e2map_sm = np.pad( e1map_sm, ((pad_Y, pad_Y),(pad_X, pad_X)), mode='constant')
+pad_e2map_sm = np.pad( e2map_sm, ((pad_Y, pad_Y),(pad_X, pad_X)), mode='constant')
 
 # Mass mapping:
 pad_kappaE,pad_kappaB = ks93(pad_e1map_sm, pad_e2map_sm)                 # padded mass map

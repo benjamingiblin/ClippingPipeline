@@ -107,7 +107,7 @@ pad_size = 2 * max(new_sizeX,new_sizeY)
 pad_X = int((pad_size - new_sizeX)/2) # num. of rows to add on each side
 pad_Y = int((pad_size - new_sizeY)/2) # num. cols to add on each side
 pad_e1map_sm = np.pad( e1map_sm, ((pad_Y, pad_Y),(pad_X, pad_X)), mode='constant')  # pad e1 map with zeros   
-pad_e2map_sm = np.pad( e1map_sm, ((pad_Y, pad_Y),(pad_X, pad_X)), mode='constant')
+pad_e2map_sm = np.pad( e2map_sm, ((pad_Y, pad_Y),(pad_X, pad_X)), mode='constant')
 
 # Mass mapping:
 pad_kappaE,pad_kappaB = ks93(pad_e1map_sm, pad_e2map_sm)                 # padded mass map

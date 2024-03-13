@@ -28,8 +28,8 @@ SN=(0.27 0.258 0.273 0.254 0.27)
 #SN=(0.28 0.28 0.28 0.28 0.28)
 
 # The los to cycle through
-los_start=1 #74 #1
-los_end=50 #699 #50
+los_start=1 #74 #74 #1
+los_end=50 #292 #699 #50
 R_start=1
 R_end=18
 
@@ -38,6 +38,7 @@ missing_los=(135 140 449 595 596 597 598 601 610 614 735)
 param_dir=/home/bengib/Clipping_Pipeline/param_files
 # launch jobs for each cosmology and redshift bins:
 
+count=1
 for i in `seq 0 24`; do         # Use this line for cosmoSLICS
 #for i in fid; do                 # this line for SLICS (and edit paramfile1/2 below).
     echo " ----------------------------------- On cosmol $i ----------------------------------- "
@@ -46,17 +47,19 @@ for i in `seq 0 24`; do         # Use this line for cosmoSLICS
 	jp1=$((j+1))                 # use jp1 in line below if you want to avoid auto-bins
 	for k in `seq $jp1 4`; do    
 
-	    # !!! SET TO cosmoSLICS !!!
+	    # !!! SET TO SLICS !!!
 	    paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 	    paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 
 
 	    echo "Running zbin $((j+1)) X zbin $((k+1))"
-	    ls $paramfile1
-	    ls $paramfile2
-	    sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end $R_start $R_end
+	    #ls $paramfile1
+	    #ls $paramfile2
+	    echo "$count $paramfile1 $paramfile2 $los_start $los_end $R_start $R_end" >> config_corrfun.txt
+	    #sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end $R_start $R_end
 	    #sbatch Launch_Combine-zbins.sh $i ${SN[$j]} ${ZBcut[$j]} ${SN[$k]} ${ZBcut[$k]} $SS $los_start $los_end
 	    #python Correlation_Function/plot_CorrFun.py Sims_Run $paramfile1 $los_start $los_end $paramfile2
+	    count=$((count+1))
 	done
     done
     

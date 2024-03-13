@@ -9,9 +9,9 @@
 # - awk line; $2, $3, $4, $5 for X-maps; $2, $3, $4 for auto.
 
 # THE INPUT SHOULD HAVE THE HEADER REMOVED!
-input=config_cross_tmp.txt
+input=config_cross_S.txt 
 output=${input}_rand
-nrows=10
+nrows=322
 
 # shuffle the order of the rows:
 awk 'BEGIN {srand()} {print rand(), $0}' $input | sort -n | cut -d ' ' -f2- > randomfile.txt

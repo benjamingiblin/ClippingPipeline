@@ -5,8 +5,8 @@
 # and a second ZBcut. It then implants the second ZBcut into the DIRname.
 # like this: (*_ZBcutAAA_X_ZBcutBBB_*)
 
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 
 # Do paramfile2 first, since variables like name take their default values
 # from paramfile 1 (hence why we're doing it second).

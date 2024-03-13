@@ -6,7 +6,7 @@
 #SBATCH --job-name=CosmoSLICS_NoiseReal
 #SBATCH --requeue
 #SBATCH --mail-type=ALL
-#SBATCH --constraint="3TBdatadisk"
+#SBATCH --constraint=datadisk
 #SBATCH --mem=15000
 
 ###### NB: Normally -mem=150000

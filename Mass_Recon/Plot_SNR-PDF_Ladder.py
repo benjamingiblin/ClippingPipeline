@@ -34,7 +34,7 @@ Plot_Ratio = False # Plot the ratio of measurements to the fiducial cosmol.
 A_IA = 0.0  # Intrinsic alignment amplitude
 Shuffle_Config = 0 # The seed used to shuffle the LOS&R in SLICS
 
-SS=5.631 # 1.408 2.816 5.631 ... #3.11 9.33 18.66
+SS=2.816 # 1.408 2.816 5.631 ... #3.11 9.33 18.66
 cosmol = []
 for i in range(25):
     cosmol.append('%s' %i)
@@ -55,15 +55,18 @@ elif PDForCUM == 'cumPDF':
 # Read in PDF's for all zbin combinations
 Survey = 'KiDS1000'
 if Survey == 'KiDS1000':
-    noise = [ 'SN0.27', 'SN0.258', 'SN0.273', 'SN0.254', 'SN0.27']
-    NLOS = 3906 #715
+    #noise = [ 'SN0.27', 'SN0.258', 'SN0.273', 'SN0.254', 'SN0.27']
+    noise = [ 'SN0.265' ]
+    #NLOS = 3906 #715
 elif Survey == 'LSST':
     noise = [ 'SN0.28', 'SN0.28', 'SN0.28', 'SN0.28', 'SN0.28']
-    NLOS = 616
-ZBcut = ['0.1-0.3', '0.3-0.5', '0.5-0.7', '0.7-0.9', '0.9-1.2']
+    #NLOS = 616
+#ZBcut = ['0.1-0.3', '0.3-0.5', '0.5-0.7', '0.7-0.9', '0.9-1.2']
+ZBcut = ['0.1-1.2']
 
 nkbins = 2000 #2000 #4
-nzbins = 15
+nzbins_auto = len(noise)
+nzbins = nzbins_auto * (nzbins_auto + 1) // 2
 PDFs = np.zeros([ len(cosmol), nzbins, nkbins ])
 
 PDFs_data = np.zeros([ nzbins, nkbins ])

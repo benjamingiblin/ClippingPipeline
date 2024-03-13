@@ -97,7 +97,11 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 		mask_variable=''
 		name_end='W3Mask'
 		DIRname_mid='_W3Mask_'
-
+		
+	elif [[ $mask == *"mosaic"* ]]; then
+	    mask_variable=''
+	    name_end='Mosaic'
+	    DIRname_mid='_Mosaic_'
 	else
 		echo "mask variable in paramfile must be 'mask' or 'nomask'. Please fix this."
 		exit 1

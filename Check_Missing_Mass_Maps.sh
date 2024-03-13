@@ -2,7 +2,7 @@
 # 03/08/2021, B. Giblin
 # Check for missing mass maps across all cosmologies, ZBcuts (& combo's), LOS and noise realisations
 
-mock_Type="cosmoSLICS" # or "cosmoSLICS"
+mock_Type="SLICS" # or "cosmoSLICS"
 
 Launch_Specific_LOS="False" #"True" / "False"
 
@@ -29,7 +29,7 @@ fi
 
 
 MRres="140.64arcs" # 60arcsec
-SS=2.816 #1.408, 2.816, 5.631 #3.11, 9.33, 18.66
+SS=1.408 #1.408, 2.816, 5.631 #3.11, 9.33, 18.66
 Mask="Mosaic"
 if [ "$Mask" == "Mosaic" ]; then
     filetag="Mosaic"
@@ -66,17 +66,17 @@ index=$1
 # make a files to submit job arrays
 config1=config_auto_${index}.txt
 config2=config_cross_${index}.txt
-echo "ArrayTaskID PARAMFILE LOS_START LOS_END" > $config1
-echo "ArrayTaskID PARAMFILE1 LOS_START LOS_END PARAMFILE2" > $config2
+#echo "ArrayTaskID PARAMFILE LOS_START LOS_END" > $config1
+#echo "ArrayTaskID PARAMFILE1 LOS_START LOS_END PARAMFILE2" > $config2
 
 count=0
-#for i in fid; do
-for i in `seq $index $index`; do   
+for i in fid; do
+#for i in `seq 0 24`; do   
     echo "--------------------------- COSMOL $i ----------------------------------------"
     for j in `seq 0 4`; do
 	jp1=$((j+1));
 	echo " xxxxxxxxxxxxxxxxxxxxxxx ${ZBcut[$j]} xxxxxxxxxxxxxxxxxxxxxx";
-	for k in `seq $jp1 4`; do  # $j 4
+	for k in `seq $j 4`; do  # $j 4
 
 	    if [ "$j" -eq "$k" ]; then ZBlabel=ZBcut${ZBcut[$j]}; else ZBlabel=ZBcut${ZBcut[$j]}_X_ZBcut${ZBcut[$k]}; fi
 	    
@@ -96,11 +96,10 @@ for i in `seq $index $index`; do
 			#f=Mass_Recon/MRres${MRres}_100Sqdeg_NOISE_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/NOISE_${filetag}.${Survey}GpAM.LOS${los}R${RR}.SS${SS}.Ekappa.npy
 		    else
 			# all the noise realisations
-			f=Mass_Recon/MRres${MRres}_${IA_Tag}100Sqdeg_SNCycle_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}n${nn}.SS${SS}.Ekappa.npy
+			#f=Mass_Recon/MRres${MRres}_${IA_Tag}100Sqdeg_SNCycle_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}n${nn}.SS${SS}.Ekappa.npy
 
 			# one noise real. per LOS
-			#f=Mass_Recon/MRres${MRres}_${IA_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.SS${SS}.Ekappa.npy
-			
+			f=Mass_Recon/MRres${MRres}_${IA_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.SS${SS}.Ekappa.npy
 		    fi
 
 		    if [ ! -f $f ]; then
@@ -110,27 +109,27 @@ for i in `seq $index $index`; do
 			#paramfile2=$param_dir/100Sqdeg_NOISE_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_MRres${MRres}ec                   
 
 			# cosmoSLICS - all the noise real.
-			paramfile1=$param_dir/${IA_Tag}100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
-			paramfile2=$param_dir/${IA_Tag}100Sqdeg_CycleSN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_Cosmol${i}_MRres${MRres}ec
+			#paramfile1=$param_dir/${IA_Tag}100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
+			#paramfile2=$param_dir/${IA_Tag}100Sqdeg_CycleSN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			# cosmoSLICS - one noise real. per LOS.
 			#paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
                         #paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			
 
 			# SLICS
-			#paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
-			#paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_MRres${MRres}ec
+			paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
+			paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_MRres${MRres}ec
 			#ls $paramfile1
 
 			
 			# This bit of code re-launches SPECIFIC los and noise realisations
 			# (to be used when you're close to getting them all!)
 			if [ "$Launch_Specific_LOS" == "True" ]; then
-			    echo $i ${SN[$j]} ${ZBcut[$j]} ${SN[$k]} ${ZBcut[$k]} ${SS} ${los}R${RR}n$nn
+			    echo $i ${SN[$j]} ${ZBcut[$j]} ${SN[$k]} ${ZBcut[$k]} ${SS} ${los}R${RR} #n$nn
 			    count=$((count+1))
 			    r=$RANDOM
-			    #param_files/Change_Specific_Paramfile.sh $paramfile1 $RR $r
-			    #param_files/Change_Specific_Paramfile.sh $paramfile2 $RR $r
+			    param_files/Change_Specific_Paramfile.sh $paramfile1 $RR $r
+			    param_files/Change_Specific_Paramfile.sh $paramfile2 $RR $r
 			    if [ "$j" -eq "$k" ]; then
 				# auto-bin
 				#sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
@@ -147,11 +146,11 @@ for i in `seq $index $index`; do
 			    count=$((count+1))
 			    if [ "$j" -eq "$k" ]; then
 				# auto-bin
-				echo "$count $paramfile1 $los_start $los_end" >> $config1
+				echo "$count $paramfile1 $los $los" >> $config1
 				#sbatch Launch.sh $paramfile1 $los_start $los_end
 			    else
 				# cross-bin
-				echo "$count $paramfile1 $los_start $los_end $paramfile2" >> $config2
+				echo "$count $paramfile1 $los $los $paramfile2" >> $config2
 				#sbatch Launch_Combine-zbins.sh $paramfile1 $los_start $los_end $paramfile2  
 			    fi
 
