@@ -29,7 +29,7 @@ fi
 
 
 MRres="140.64arcs" # 60arcsec
-SS=1.408 #1.408, 2.816, 5.631 #3.11, 9.33, 18.66
+SS=2.816 #1.408, 2.816, 5.631 #3.11, 9.33, 18.66
 Mask="Mosaic"
 if [ "$Mask" == "Mosaic" ]; then
     filetag="Mosaic"
@@ -56,7 +56,7 @@ param_dir=/home/bengib/Clipping_Pipeline/param_files
 
 nn_start=0
 nn_end=9  # range of noise realisations to cycle through
-nn=0
+nn=3
 
 RR_start=1
 RR_end=18
@@ -76,7 +76,7 @@ for i in fid; do
     for j in `seq 0 4`; do
 	jp1=$((j+1));
 	echo " xxxxxxxxxxxxxxxxxxxxxxx ${ZBcut[$j]} xxxxxxxxxxxxxxxxxxxxxx";
-	for k in `seq $j 4`; do  # $j 4
+	for k in `seq $j $j`; do  # $j 4
 
 	    if [ "$j" -eq "$k" ]; then ZBlabel=ZBcut${ZBcut[$j]}; else ZBlabel=ZBcut${ZBcut[$j]}_X_ZBcut${ZBcut[$k]}; fi
 	    
@@ -90,7 +90,10 @@ for i in fid; do
 
 		    if [ "$mock_Type" == "SLICS" ]; then
 			# normal map
-			f=Mass_Recon/MRres${MRres}_100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.SS${SS}.Ekappa.npy
+			#f=Mass_Recon/MRres${MRres}_100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.SS${SS}.Ekappa.npy
+
+			# noise-real. SLICS map:
+			f=Mass_Recon/MRres${MRres}_100Sqdeg_SNCycle_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}n${nn}.SS${SS}.Ekappa.npy
 
 			# a pure noise map
 			#f=Mass_Recon/MRres${MRres}_100Sqdeg_NOISE_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/NOISE_${filetag}.${Survey}GpAM.LOS${los}R${RR}.SS${SS}.Ekappa.npy
@@ -116,9 +119,12 @@ for i in fid; do
                         #paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			
 
-			# SLICS
-			paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
-			paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_MRres${MRres}ec
+			# SLICS - one noise real. per LOS.
+			#paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
+			#paramfile2=$param_dir/100Sqdeg_SN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_MRres${MRres}ec
+			# SLICS - all the noise real.
+			paramfile1=$param_dir/100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
+                        paramfile2=$param_dir/100Sqdeg_CycleSN${SN[$k]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$k]}_ThBins9_MRres${MRres}ec
 			#ls $paramfile1
 
 			
@@ -146,17 +152,17 @@ for i in fid; do
 			    count=$((count+1))
 			    if [ "$j" -eq "$k" ]; then
 				# auto-bin
-				echo "$count $paramfile1 $los $los" >> $config1
+				echo "$count $paramfile1 $los_start $los_end" >> $config1
 				#sbatch Launch.sh $paramfile1 $los_start $los_end
 			    else
 				# cross-bin
-				echo "$count $paramfile1 $los $los $paramfile2" >> $config2
+				echo "$count $paramfile1 $los_start $los_end $paramfile2" >> $config2
 				#sbatch Launch_Combine-zbins.sh $paramfile1 $los_start $los_end $paramfile2  
 			    fi
 
 			    #echo "waiting 20 min to give jobs a head start"
 			    #sleep 20m
-			    #break # stop scrolling through LOS now you found a missing one for this cosmol & zbin
+			    break # stop scrolling through LOS now you found a missing one for this cosmol & zbin
 			fi
 			
 		    fi

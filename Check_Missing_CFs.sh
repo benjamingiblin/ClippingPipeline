@@ -63,6 +63,9 @@ RR_start=1
 RR_end=18
 RR=2       # region; used if working with mosaic mocks
 
+index=$1
+config1=config_auto_${index}.txt
+config2=config_cross_${index}.txt
 count=0
 for file_type in "SS${SS}.rCLIP_X3sigma.CorrFun.asc" "ORIG.CorrFun.asc"; do
     echo " FILE_TYPE: $file_type "
@@ -140,13 +143,15 @@ for i in fid; do
 				    
 			    if [ "$j" -eq "$k" ]; then
 				# auto-bin
-				sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
+				#sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
+				echo "$count ${paramfile1}_tmp${r} $los $los" >> $config1
 			    else
 				# cross-bin
-				sbatch Launch.sh ${paramfile1}_tmp${r} $los $los # if the *.asc cat doesnt exist
-				sbatch Launch.sh ${paramfile2}_tmp${r} $los $los # if the *.asc cat doesnt exist
+				#sbatch Launch.sh ${paramfile1}_tmp${r} $los $los # if the *.asc cat doesnt exist
+				#sbatch Launch.sh ${paramfile2}_tmp${r} $los $los # if the *.asc cat doesnt exist
+				#echo "$count ${paramfile1}_tmp${r} ${paramfile2}_tmp${r} $los $los $RR $RR" >> $config2
 				# or this one, to calc the CF itself:
-				#sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh ${paramfile1}_tmp${r} ${paramfile2}_tmp${r} $los_start $los_en
+				sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh ${paramfile1}_tmp${r} ${paramfile2}_tmp${r} $los $los $RR $RR
 			    fi
 			    
 			else
@@ -155,16 +160,20 @@ for i in fid; do
 			    count=$((count+1))
 			    if [ "$j" -eq "$k" ]; then
 				# auto-bin
-				sbatch Launch.sh $paramfile1 $los $los
+				#sbatch Launch.sh $paramfile1 $los $los
 				#sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los $los
+				echo "$count $paramfile1 $paramfile2 $los $los $R $R" >> $config1
 			    else
 				# cross-bin
 			    	#sbatch Launch.sh $paramfile1 $los $los
 				#sbatch Launch.sh $paramfile2 $los $los
-				sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2	$los $los
+				#sbatch Launch_Calc_CrossCorr_Cycle_z_And_LOS.sh $paramfile1 $paramfile2 $los_start $los_end 1 18
+				echo "$count $paramfile1 $paramfile2 $los_start $los_end 1 18" >> $config2
+				#count=$((count+1))
+				#echo "$count $paramfile2 $los $los" >> $config2
 			    fi
 			    
-			    #break # stop scrolling through LOS now you found a missing one for this cosmol & zbin
+			    break # stop scrolling through LOS now you found a missing one for this cosmol & zbin
 			fi
 			
 		    fi

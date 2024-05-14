@@ -292,3 +292,20 @@ def Combine_zbin_DIRname(input_args):
 
  	DIRname = DIRname1.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname2.split('ZBcut')[-1]
  	return name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo_A, zhi_A, ThBins, OATH, los, los_end
+
+
+def Shuffle_filenames_LOSnR( Shuffle_Config, filenames, R ):
+        # Read in the matrix which describes how the LOS & R are shuffled;
+        # this depends on the ID used to shuffle: Shuffle_Config (fiducially set to 0):
+        parent_dir = '/home/bengib/Clipping_Pipeline/Mass_Recon/Shuffled_SLICS-K1000-Mosaic_Configs'
+        shffld_lr = np.load('%s/Shuffled_Config%s.npy' %(parent_dir,Shuffle_Config))
+        
+        # Re-shuffle the filenames in accordance with the 217x18 shuffle matrix
+        files_shffld = []
+        for i in range(len(filenames)):
+                los_num = filenames[i].split('LOS')[-1].split('R')[0]
+                # replace the LOS num with another from the matrix
+                # (which is different for each of the 18 regions):
+                files_shffld.append( filenames[i].replace('LOS%sR%s' %(los_num,R),
+                                                          'LOS%sR%s'%(int(shffld_lr[i,R-1]),R) ))
+        return files_shffld

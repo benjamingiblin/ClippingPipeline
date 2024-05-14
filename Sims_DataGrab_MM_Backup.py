@@ -216,25 +216,17 @@ else:
 ######################## SHAPE NOISE & IAs #############################
 # 28/05/2019 - edit to do more accurate contribution of SN to e_obs:
 # e = e1 + j*e2
-
+e_rng = e1_rng + 1j*e2_rng     # noise
 if 'Mosaic' in DIRname:
         print("Mosaic mocks require an extra e2 sign flip; applying it here.")
         e2_temp *= -1.
 e_temp = e1_temp + 1j*e2_temp  # shear
 
-# Now add IA to shear if necessary:
-if "IA" in DIRname:
-        IA_amp = float(DIRname.split('IA')[-1].split('_')[0])
-        IA1, IA2 = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_IA1_IA2.dat'%(data_DIR, DIRname, name, gpam, los),
-                              usecols=(0,1), unpack=True)
-        e_IA = IA1*IA_amp + 1j*IA2*IA_amp # complex IA
-        # complex addition of shear and e_IA
-        e_temp = (e_IA + e_temp) / (1+ e_temp*np.conj(e_IA))
-
 # complex addition of shear and noise:
-e_rng = e1_rng + 1j*e2_rng     # noise 
 e_obs = (e_rng + e_temp) / (1+ e_rng*np.conj(e_temp))
 
+#e1 = e1_temp + e1_rng
+#e2 = e2_temp + e2_rng
 
 if 'Mosaic' in DIRname:
 	print("Factoring in the m_Angus bias")
@@ -243,6 +235,16 @@ if 'Mosaic' in DIRname:
 	e_obs *= (1.+mbias)
 else:
 	Weight = np.ones_like(X)
+
+
+if "IA" in DIRname:
+	IA_amp = float(DIRname.split('IA')[-1].split('_')[0])
+	IA1, IA2 = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_IA1_IA2.dat'%(data_DIR, DIRname, name, gpam, los),
+							  usecols=(0,1), unpack=True)
+	e_IA = IA1*IA_amp + 1j*IA2*IA_amp # complex IA
+	   
+	# complex addition of e_obs and e_IA
+	e_obs = (e_IA + e_obs) / (1+ e_obs*np.conj(e_IA))
 
 e1 = np.real(e_obs)
 e2 = np.imag(e_obs)

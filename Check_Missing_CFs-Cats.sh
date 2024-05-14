@@ -3,7 +3,7 @@
 # Check for missing SHEAR CATALOGUES needed to compute CFs
 # across all cosmologies, ZBcuts (& combo's), LOS and noise realisations
 
-mock_Type="SLICS" # or "cosmoSLICS"
+mock_Type="cosmoSLICS" # or "cosmoSLICS"
 
 Launch_Specific_LOS="True" #"True" / "False"
 
@@ -64,11 +64,13 @@ RR_start=1
 RR_end=18
 RR=2       # region; used if working with mosaic mocks
 
+index=$1
+config=config_auto_${index}.txt
 count=0
 for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.ThetaX_ThetaY_e1_e2_w.Std.asc"; do
     echo " FILE_TYPE: $file_type "
-    for i in fid; do
-    #for i in `seq 0 24`; do   
+    #for i in fid; do
+    for i in `seq 0 24`; do   
 	echo "--------------------------- COSMOL $i ----------------------------------------"
 	for j in `seq 0 4`; do
 	    echo " xxxxxxxxxxxxxxxxxxxxxxx ${ZBcut[$j]} xxxxxxxxxxxxxxxxxxxxxx";
@@ -105,11 +107,11 @@ for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.The
 			# cosmoSLICS - all the noise real.
 			#paramfile1=$param_dir/${IA_Tag}100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			# cosmoSLICS - one noise real. per LOS.
-			#paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
+			paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			
 
 			# SLICS
-			paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
+			#paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
 			#ls $paramfile1
 
 			# This bit of code re-launches SPECIFIC los and noise realisations
@@ -130,14 +132,16 @@ for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.The
 				done
 			    fi
 				    
-			    sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
+			    #sbatch Launch.sh ${paramfile1}_tmp${r} $los $los
+			    echo "$count ${paramfile1}_tmp${r} $los $los" >> $config
 			    			    
 			else
 			    #echo $f
 			    echo $i ${SN[$j]} ${ZBcut[$j]} ${SS} ${los}R${RR} #${los_end}
 			    count=$((count+1))
 			    # auto-bin
-			    sbatch Launch.sh $paramfile1 $los $los
+			    #sbatch Launch.sh $paramfile1 $los $los
+			    echo "$count ${paramfile1} $los_start $los_end" >> $config
 			    
 			    #break # stop scrolling through LOS now you found a missing one for this cosmol & zbin
 			fi

@@ -1,7 +1,10 @@
 # 26/10/2015
 # B. M. Giblin, PhD student EDinburgh
 # Calculate the average xi+/xi- CFs over NLOS, save and plot.
-# AVERAGE over NLOS number of LOS
+# This code is similar to the original, plot_CorrFun.py, but it reads in
+# TWO param files, corresponding to two different zbins, assembles the name of
+# the cross-correlation directory, and reads in / averages those CFs.
+# 2nd extra paramfile *needs* to be the last argument.
 
 
 import pylab as plt
@@ -27,8 +30,8 @@ font = {'family' : 'serif',
 plt.rc('font', **font)
 plt.rcParams["mathtext.fontset"] = "cm"
 
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/' # Where the codes of the pipeline reside
-data_DIR='/home/bengib/Clipping_SimsLvW/' # Where the outputfiles and data are saved mid-computation
+pipeline_DIR='/home/bengib/Clipping_Pipeline/' # Where the codes of the pipeline reside
+data_DIR='/home/bengib/Clipping_Pipeline/' # Where the outputfiles and data are saved mid-computation
 classdir = pipeline_DIR + "/ShowSumClass"
 
 sys.path.insert(0, classdir) # add directory in which classes & functions 
@@ -36,11 +39,18 @@ sys.path.insert(0, classdir) # add directory in which classes & functions
 from ClassWarfare import Filter_Input, Handle_CF_Files
 from FunkShins import Sort_Array_IntoGroups
 
-variable = Filter_Input(sys.argv)
+CrossCorr = False       # If True, reads in a second param file corresponding to another z bin,
+                       # it assembles the name of the cross-corr directory and averages THOSE CFs.
+
+if CrossCorr:
+	print("plot_CorrFun.py is set up to average the CROSS-CORRELATION CFs. Expecting two paramfiles to be inputted.")
+	variable = Filter_Input(sys.argv[:-1])                     # omitting the 2nd paramfile
+	variable_extra = Filter_Input(sys.argv[0:2]+[sys.argv[-1]]+sys.argv[3:5])  # omitting the 1st paramfile
+else:
+	variable = Filter_Input(sys.argv)
+        
 variable.Filter()
 RUN = sys.argv[1]
-
-
 
 
 TC='Y' 					# If TC='Y', then this will average/plot TreeCorr instead of Athena
@@ -52,6 +62,7 @@ if TC == 'Y':
 	theta_col=1
 	xip_col=3 # xip is in a different place in TreeCorr output file to Athena
 	w_col=9
+
 else:
 	Tree=''
 	theta_col=0
@@ -61,13 +72,19 @@ else:
 if RUN == 'Sims_Run':
 
 	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los_start, los_end = variable.Unpack_Sims()
-	
+	frac_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlFrac.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname, name, gpam, SS, sigma))
+	vol_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlVol.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname, name, gpam, SS, sigma))
+
+	if CrossCorr:
+		_,_,DIRname_ex,_,_,SN_ex,_,_,_,_, zlo_ex,zhi_ex,_,_,_,_ = variable_extra.Unpack_Sims()
+		DIRname = DIRname.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname_ex.split('ZBcut')[-1]
+		print("Cross-corr DIRname is:", DIRname)
+                
 	indir='%s/%sCorrelation_Function/%s/ThBins%s/' %(data_DIR, Tree, DIRname, ThBins)
 	# Group the input files
 	files_uc = glob.glob('%s%s.%sGpAM.LOS*.ORIG.CorrFun.asc'%(indir,name,gpam))
 	files_c = glob.glob('%s%s.%sGpAM.LOS*.SS%s.rCLIP_%ssigma.CorrFun.asc'%(indir,name,gpam,SS,sigma))
-	frac_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlFrac.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname, name, gpam, SS, sigma))
-	vol_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlVol.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname, name, gpam, SS, sigma))
+
 	# Remove files outside of the LOS range.
 	files_uc_copy = []
 	files_c_copy = []
@@ -78,7 +95,7 @@ if RUN == 'Sims_Run':
 		try:
 			l = int(f.split('LOS')[-1].split('.ORIG')[0])
 		except ValueError:
-			l = int(f.split('LOS')[-1].split('.ORIG')[0].split('n')[0])
+			l = int(f.split('LOS')[-1].split('.ORIG')[0].split('R')[0])
 		if l <= int(los_end) and l >= int(los_start):
 			files_uc_copy.append(f)
 
@@ -86,7 +103,7 @@ if RUN == 'Sims_Run':
 		try:
 			l = int(files_c[i].split('LOS')[-1].split('.SS')[0])
 		except ValueError:
-			l = int(files_c[i].split('LOS')[-1].split('.SS')[0].split('n')[0]) 
+			l = int(files_c[i].split('LOS')[-1].split('.SS')[0].split('R')[0]) 
 		if l <= int(los_end) and l >= int(los_start):
 			files_c_copy.append(files_c[i])
 			frac_files_copy.append(frac_files[i])	
@@ -360,8 +377,8 @@ colour_array = ['magenta', 'darkblue']
 
 
 # The plotting bit
-Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
-Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
+#Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
+#Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
 
 stack_errCFp = np.stack((errCFp_c, np.zeros(len(theta)) ))
 stack_errCFp_cuc = np.stack((errCFp_cuc, np.zeros(len(theta)) ))

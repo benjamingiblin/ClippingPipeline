@@ -157,7 +157,7 @@ fi
 
 #exit
 # 3. get_clipped_shear.py (<Clipping_K>) 
-#python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
+python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
 if [ $? -eq 1 ]; then
 	echo "$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline."
 	printf "\n$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline." > $pipeline_DIR/Error_Reports/Error_Report.txt
