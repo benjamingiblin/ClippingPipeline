@@ -41,8 +41,8 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 	ThBins=${args[11]}
 	MRres=${args[12]} # resolution to use in mass reconstruction (mask with this res should exist)
 	OATH=${args[13]}
-	IA=${args[14]}
-	#echo "IA is $IA"
+	Sys=${args[14]}
+	#echo "Sys is $Sys"
 	#echo $gpam, $SS, $sigma, $SN, $mask, $z, $PS, $sqdeg, $cosmol, "END"
 
 
@@ -156,7 +156,7 @@ if [ $# -eq 4 ] && [ "$1" == "Sims_Run" ]; then
 		Prepend="NSIDE"$MRres"_"
 	fi
 	
-	if [[ $IA == *"IA"* ]]; then Prepend=${Prepend}${IA}_; fi
+	if [[ $Sys == *"IA"*  ||  $Sys == *"Bary"* ]]; then Prepend=${Prepend}${Sys}_; fi
 
 	name=$name_start$name_end
 	DIRname="$Prepend$sqdeg"Sqdeg$DIRname_start$DIRname_mid"$gpam"GpAM_z"$z"_ZBcut"$ZBcut$DIRname_end"

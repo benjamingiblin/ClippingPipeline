@@ -215,9 +215,9 @@ class Filter_Input:
 		MRres=args[12]
 		OATH=args[13]
 		try:
-			IA=args[14]
+			Sys=args[14] # Opt sys param (IA1.0, BaryON, etc.)
 		except IndexError:
-			IA=""
+			Sys=""
                 
 		# Check if shape noise
 		if SN == 'ALL' or SN == 'All' or SN == 'all':
@@ -336,8 +336,8 @@ class Filter_Input:
 			else:
 				Prepend='MRres%s_' %MRres
 	
-			if "IA" in IA:
-				Prepend += '%s_' %IA
+			if "IA" in Sys or "Bary" in Sys:
+				Prepend += '%s_' %Sys
 
 		elif int(sqdeg) == 5000 :
 			Prepend='NSIDE%s_'%MRres 	# 'NSIDExxxx_'

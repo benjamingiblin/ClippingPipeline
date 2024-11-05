@@ -298,14 +298,39 @@ def Shuffle_filenames_LOSnR( Shuffle_Config, filenames, R ):
         # Read in the matrix which describes how the LOS & R are shuffled;
         # this depends on the ID used to shuffle: Shuffle_Config (fiducially set to 0):
         parent_dir = '/home/bengib/Clipping_Pipeline/Mass_Recon/Shuffled_SLICS-K1000-Mosaic_Configs'
-        shffld_lr = np.load('%s/Shuffled_Config%s.npy' %(parent_dir,Shuffle_Config))
-        
-        # Re-shuffle the filenames in accordance with the 217x18 shuffle matrix
+
+        # Determine if there's multiple noise realns:
+        if 'Cycle' in filenames[0]:
+                # figure out how many noise realns there are:
+                Nnoise = len( [i for i in filenames if 'LOS292' in i] ) # how many LOS292 exist for this R
+                shffld_lr = np.load('%s/Shuffled_Config%s_Nnoise%s.npy' %(parent_dir,Shuffle_Config,Nnoise))
+                NLOS = len( [i for i in filenames if 'R%sn0'%R in i] )  # how many LOS for this R and n=0
+        else:
+                shffld_lr = np.load('%s/Shuffled_Config%s.npy' %(parent_dir,Shuffle_Config))
+                NLOS = len(filenames)
+                Nnoise = 1
+                
+        # Re-shuffle the filenames in accordance with the (Nnoise x) 217x18 shuffle matrix
         files_shffld = []
-        for i in range(len(filenames)):
-                los_num = filenames[i].split('LOS')[-1].split('R')[0]
-                # replace the LOS num with another from the matrix
-                # (which is different for each of the 18 regions):
-                files_shffld.append( filenames[i].replace('LOS%sR%s' %(los_num,R),
-                                                          'LOS%sR%s'%(int(shffld_lr[i,R-1]),R) ))
+        count = 0
+        for i in range(NLOS):
+                for j in range(Nnoise): 
+                        los_num = filenames[count].split('LOS')[-1].split('R')[0]
+                        # replace the LOS num with another from the matrix
+                        # (which is different for each of the 18 regions):
+                        if 'Cycle' in filenames[0]:
+                                # Could use j (noise idx) to pick which layer of shuffle matrix to get LOS from
+                                # but this assumes filenames really are ordered by noise real. num.
+                                # safer to use nn from filename itself.
+                                nn = int( filenames[count].split('LOS%sR%sn' %(los_num,R) )[-1].split('.')[0] )
+                                tmp_file = filenames[count].replace('LOS%sR%sn%s' %(los_num,R,nn),
+                                                                    'LOS%sR%sn%s'%(int(shffld_lr[nn,i,R-1]),R,nn) )
+                        else:
+                                tmp_file = filenames[count].replace('LOS%sR%s' %(los_num,R),
+                                                                    'LOS%sR%s'%(int(shffld_lr[i,R-1]),R) )
+
+                        files_shffld.append( tmp_file )
+                        count+=1
+
         return files_shffld
+
