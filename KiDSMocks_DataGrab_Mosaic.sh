@@ -31,6 +31,10 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 	while [[ ${#cosmol_fname} -lt 2 ]] ; do cosmol_fname="0${cosmol_fname}"; done
     fi
 
+    # Check if it's a syst. run (baryons or photo-z) VS regular run
+    # Note that IAs are non-mosaic mocks so handled by KiDSMocks_DataGrab.sh
+    
+    
     # If los<26 read in 'a' seeds, otherwise 'f' seeds
     if [ "$los_num" -lt "26" ]; then
         seed="a"

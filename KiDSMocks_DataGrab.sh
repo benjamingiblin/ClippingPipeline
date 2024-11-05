@@ -61,7 +61,7 @@ if [[ ${ENDname[-1]} == *"Cosmol"* ]]; then
 	    source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
 	    # But is this the IA mocks or is it the normal (sys-free) mocks?
 	    
-	    if [[ $IA == *"IA"* ]]; then
+	    if [[ $Sys == *"IA"* ]]; then
 		# IA mocks stored in v. different directory:
 		mocks_datadir=/home/jharno/public_html/cosmo-SLICS/data/${cosmol_fname}_${seed}/IA_mocks_smooth05Mpcoverh/
 		filename=GalCatalog_IA_${bin_name}_AIA1.0.dat_LOS${los_fname}
@@ -148,7 +148,7 @@ fi
 
 
 
-if [[ $IA == *"IA"* ]]; then
+if [[ $Sys == *"IA"* ]]; then
     # The IA mocks are ascii catalogues (use awk)
     # (x_arcmin, y_arcmin, redshift, pure_g1, pure_g2, pure_noise1, pure_noise2, pure_IA1, pure_IA2,...)
     # save IA components separately, add noise and IA*<amp> in Sims_DataGrab.py
