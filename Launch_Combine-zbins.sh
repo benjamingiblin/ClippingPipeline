@@ -9,12 +9,13 @@
 #SBATCH --constraint=datadisk
 #SBATCH --mem=25000
 
+RUN=Sims_Run
 paramfile1=$1
 los_start=$2
 los_end=$3
 paramfile2=$4
 
-./Master_CorrFun_ByParts.sh Sims_Run $paramfile1 $los_start $los_end $paramfile2
+./Master_CorrFun_ByParts.sh $RUN $paramfile1 $los_start $los_end $paramfile2
 
 
 ###########################SBATCH --mail-user=bengib@roe.ac.uk 

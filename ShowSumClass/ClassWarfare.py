@@ -21,163 +21,21 @@ class Filter_Input:
 		self.arguments = arguments
 
 	def Filter(self):
-		if self.arguments[1] == 'KiDS_Run':
-			# Check if they're giving multiple fields as input (i.e. for plotting code)
-			# Allow if so.
-			Field=[]
-			for f in self.arguments[3:]:
-				if list(f)[0] == 'G':
-					Field.append(f)
-					#print("Identified target field %s" %f)
-			try:
-				los_end = int(self.arguments[-1])
-			except ValueError:
-				los_end=-1
-			try:
-				los = int(self.arguments[-2])
-			except (ValueError, IndexError):
-				los=-1 
 
-			# Subtract off no. of args that are Field names.
-			num_arg = 2 + len(Field)
-			if los >= 0:
-				num_arg += 2
-				#print("Allowed no. of args is %s"%num_arg)
-		
-
-		elif self.arguments[1] == 'Sims_Run':
+		if self.arguments[1] == 'Sims_Run' or self.arguments[1] == 'KiDS_Run':
 			num_arg = 4
 		else:
 			print("FIRST ARGUMENT MUST BE EITHER: \n")
-			print("		KiDS_Run (for KiDS-450) \n")
+			print("		KiDS_Run (for KiDS-1000) \n")
 			print("		Sims_Run (for 36sqdeg, 60sqdeg, 100sqdeg, OR 5000sqdeg(Mira Titan) mocks) \n")
 			sys.exit(1)
 
 		if len(self.arguments)-1 != num_arg:
 			print('INVALID NUMBER OF ARGUMENTS.' )
-			print('		KiDS arguments = KiDS_Run, paramfile, G.., G.., ..etc. Noise_los, Noise_los_end')
-			print('							->Tag as many KiDS fields as desired on the end.')
-			print('		Sims arguments = Sims_Run, paramfile, LOS_start, LOS_end')
+			print('		arguments = Sims_Run/KiDS_Run, paramfile, LOS_start, LOS_end')
 			print('							->For Mira Titan run, LOS_start, LOS_end are dummies')
 			print('PLEASE TRY AGAIN')
 			sys.exit(1)	
-
-
-
-
-	def Unpack_KiDS(self):
-	
-		# See if there are INTEGERS at the end of Field arguments
-		# If so, these are the PURE NOISE REALISATION Numbers (used to correct for KiDS-450 mask)
-		try:
-			los_end = int(self.arguments[-1])
-		except ValueError:
-			los_end=-1
-		try:
-			los = int(self.arguments[-2])
-		except (ValueError, IndexError):
-			los=-1
-
-
-		paramfile = self.arguments[2]
-		f = open(paramfile)
-		params = f.readlines()
-		args=[]
-		for line in params:
-			try:
-				foo = line.strip('\n').split()[0]
-				if foo !='#' and foo != '':
-					args.append(foo) 
-			except (ValueError,IndexError):
-				break
-				# ignore blank lines at the end
-
-		Blind = args[0]
-		SS=args[1]
-		sigma=args[2]
-		zlo=args[3]
-		zhi=args[4]
-		ThBins=args[5]
-		MRres=args[6]
-		OATH=args[7]
-		NOISE=args[8]
-		mask_variable=args[9]
-
-
-		# Check if they're giving multiple fields as input (i.e. for plotting code)
-		# Allow if so.
-		Field=[]
-		for f in self.arguments[3:]:
-			if list(f)[0] == 'G':
-				if NOISE=="Y" and los >= 0 and los_end >= 0:
-					for nn in range(los, los_end+1): 
-						Field.append('%s_NOISE%s'%(f,nn))
-				else:
-					Field.append(f)
-
-		if len(Field) == 0:
-			print("No valid KiDS fields given as input")
-			sys.exit(1)
-		
-		
-
-		# Check if there's a zB cut
-		try:
-			float(zlo)
-			zlo_variable=True
-		except ValueError:
-			zlo_variable=False
-			ZBcut='None'
-		
-		try: 
-			float(zhi)
-			zhi_variable=True		
-		except ValueError:
-			zhi_variable=False
-			ZBcut='None'
-
-		if zlo_variable and zhi_variable:
-			if zhi > zlo:
-				ZBcut='%s-%s' %(zlo, zhi)
-			else:
-				ZBcut='None'
-
-		if MRres == '' or MRres == '-' or MRres == 'arcmin' or MRres == '1arcmin':
-			MRres='arcmin'
-			Prepend=''
-		else:
-			Prepend='MRres%s_' %MRres
-
-
-		# Check if we're running shape noise only on this KiDS_Run
-		if NOISE == "N" or NOISE == "" or NOISE == "-":
-			NOISE = "N"
-			Add_Noise = ""
-		else:
-			NOISE = "Y"
-			Add_Noise = "_NOISE" 
-
-
-		# Check if we're doing masking on this KiDS_Run 
-		if mask_variable == "mask" or mask_variable == "" or mask_variable == "-":
-			mask_variable=""
-			Add_Mask=""
-		else:
-			mask_variable="-nomask"
-			Add_Mask="_NoMask"
-
-
-		DIRname = '%sKiDS_Fields_ZBcut%s%s%s' %(Prepend, ZBcut, Add_Noise, Add_Mask)
-
-			
-		# Check if No. Athena Theta bins is an integer
-		try:
-			int(ThBins)
-		except ValueError:
-			print("The number of Athena theta bins in param file is not an integer. \n Setting this number to default of 9 bins")
-			ThBins=9
-			
-		return DIRname, Blind, SS, sigma, zlo, zhi, ThBins, OATH, Field[0]
 
 
 
@@ -220,9 +78,13 @@ class Filter_Input:
 			Sys=""
                 
 		# Check if shape noise
-		if SN == 'ALL' or SN == 'All' or SN == 'all':
-			name_start = 'NOISE_'
-			DIRname_start='_NOISE'
+		if 'ALL' in SN or 'All' in SN or 'all' in SN:
+			if 'KiDS' in SN:
+				name_start = 'NOISE-KiDS_'
+				DIRname_start='_NOISE-KiDS'
+			else:
+				name_start = 'NOISE_'
+				DIRname_start='_NOISE'
 		elif 'Cycle' in SN or 'cycle' in SN:
 			# Set the noise level (not specified in param_file if doing Cycle):
 			if 'KiDS1000' in str(gpam):
@@ -241,6 +103,9 @@ class Filter_Input:
 			        name_start='SN0.28_' 
                                         
 			DIRname_start='_SNCycle'
+		elif 'KiDS' in SN:
+		        name_start='SNKiDS_'
+		        DIRname_start='_SNKiDS'
 		else:
 			try:
 				float(SN)
@@ -280,7 +145,7 @@ class Filter_Input:
 			DIRname_end='_HS8'
 		elif cosmol == 'low_sigma8':
 			DIRname_end='_LS8'
-		elif cosmol == 'fid':
+		elif cosmol == 'fid' or cosmol=='KiDS1000':
 			DIRname_end='_Cosmol%s' %cosmol
 		else:
 			try:
@@ -336,7 +201,7 @@ class Filter_Input:
 			else:
 				Prepend='MRres%s_' %MRres
 	
-			if "IA" in Sys or "Bary" in Sys:
+			if "IA" in Sys or "Bary" in Sys or "dz" in Sys or "SLC" in Sys:
 				Prepend += '%s_' %Sys
 
 		elif int(sqdeg) == 5000 :
@@ -346,6 +211,7 @@ class Filter_Input:
 		name = '%s%s' %(name_start, name_end)
 		# e.g. NOISE_Mask, NF_test, SN0.27_Mask etc.
 		DIRname = '%s%sSqdeg%s%s%sGpAM_z%s_ZBcut%s%s' %(Prepend,sqdeg, DIRname_start, DIRname_mid, gpam, z, ZBcut, DIRname_end) 
+		####if self.arguments[1] == 'KiDS_Run': DIRname = 'KiDS1000Data_%s' %DIRname; fi
 		z='%s%s' %(z, DIRname_end)
 		#print("DIRname is %s, z is %s" %(DIRname, z))
 		#e.g. 	60Sqdeg_NF_Mask_8.53GpAM_z0.640

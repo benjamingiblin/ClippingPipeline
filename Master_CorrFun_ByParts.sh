@@ -34,8 +34,9 @@ if [ ! -f "$pipeline_DIR/Error_Reports/" ]; then
 fi
 
 
-if [ "$RUN" == "Sims_Run" ]; then
-	
+if [ "$RUN" == "Sims_Run" ] || [ "$RUN" == "KiDS_Run" ]; then
+
+    echo "---------- YOU ARE DOING A $RUN --------- "
 	# Assemble the LOS into one array over which you loop
 	source ShowSumClass/AssembleLOS.sh $DIRname $sqdeg $z $cosmol $los_start $los_end
 
@@ -58,50 +59,6 @@ if [ "$RUN" == "Sims_Run" ]; then
 	timerfile=$final_dir/Timings.$name.$gpam"GpAM".$sigma"sigma".LOS$los_start"_"LOS$los_end.txt
 	clipfilepath=$pipeline_DIR/Clipping_K/Clip_Thresholds/ClipThreshold_"$sigma"sigma."$sqdeg"Sqdeg.SS$SS
 
-
-else
-    # NEED TO EDIT THIS PART TO SET UP MULTIPLE ZBcut DIRECTORIES
-
-	# Assemble the Fields into array over which you loop
-	Loop_Array=()
-	timerfile_subname="" # assemble from input fields	
-	count_Fields=0
-	echo "You have selected Field(s):" 
-	for f in ${Field[*]}; do
-		Loop_Array+=("$f")
-		echo "		$f"
-
-		# Only record the G* part of the name, with no repeats.
-		strip_name=$(echo ${f%_NOISE*})
-		#echo "strip_name is "$strip_name
-		#echo "timer_subname is "$timerfile_subname
-		if [[ "$timerfile_subname" != *"$strip_name"* ]]; then
-			timerfile_subname+="$strip_name"
-			count_Fields=$((count_Fields+1))
-		fi
-
-	done
-
-	NOISE_NLOS=0
-	if [[ $DIRname == *"NOISE"* ]]; then 
-		NOISE_NLOS=$((${#Field[@]} / count_Fields))
-		timerfile_subname+="_NOISE"$NOISE_NLOS
-	fi
-	#echo $timerfile_subname
-
-	echo "	Blind:		 	 $Blind"
-	echo "	F-Scale:	 	 $SS Pxls,"
-	echo "	Clip threshold:	 $sigma sigma"
-	echo "  zlow             $zlo"
-	echo "  zhigh:           $zhigh"
-	echo "	Pure Noise?:		 $NOISE"
-	echo "	No. of Noise Realisations: 		$NOISE_NLOS"
-
-
-	final_dir=$pipeline_DIR/Correlation_Function/$DIRname/ThBins$ThBins
-	timerfile=$final_dir/Timings.Blind$Blind.SS$SS.$sigma"sigma".$timerfile_subname.txt
-	clipfilepath=$pipeline_DIR/Clipping_K/Clip_Thresholds/ClipThreshold_"$sigma"sigma.Blind$Blind.SS$SS
-
 fi
 
 
@@ -123,8 +80,6 @@ for DIR in $pipeline_DIR $data_DIR; do
         done
     done
 done
-
-
 
 
 echo "Master will loop over the following Fields/Lines of sight"
@@ -154,7 +109,7 @@ rm -f $timerfile # remove the one already there, don't just peg onto old one.
 echo "Time at which pipeline started: $(date)" >> $timerfile
 
 # Now loop over the Fields/LOS
-for Part in I II; do  # I II 
+for Part in I; do  # I II 
 	counter=0
 	for f in ${Loop_Array[*]}; 
 	do
@@ -167,43 +122,24 @@ for Part in I II; do  # I II
 			counter=0
 		fi	
 
-
-
 		echo ""
 		echo "Running pipeline part $Part on Field $f."
 		echo "Final Field is ${Loop_Array[-1]}." 
 		echo ""
-
 		echo "Running pipeline part $Part on Field $f at $(date)" >> $timerfile
 
-
-
-
-		if [ "$RUN" == "Sims_Run" ]; then
 		        
-			$pipeline_DIR/SkelePipeline_Part"$Part".sh $RUN $paramfile $f $los_end $paramfile2 &
-			
-			# Exit if there's a problem - NOTE. Doesnt always work, since it may take time to hit an error
-			# ...whereas the pipeline has already moved onto commence subsequent LOS runs.
-			if [ $? -eq 1 ]; then
-				echo "$(date): SkelePipeline_Part$Part.sh failed for Field $f. Exiting Master."
-				printf "$(date): SkelePipeline_Part$Part.sh failed for Field $f. Exiting Master." > $pipeline_DIR/Error_Reports/Error_Report.txt
-				printf " -----------------------------------------------------------------------" > $pipeline_DIR/Error_Reports/Error_Report.txt
-				wait # for other LOS to finish/fail
-	    		exit 1
-			fi
-		else
-			$pipeline_DIR/SkelePipeline_Part"$Part".sh $RUN $paramfile $f &
-			if [ $? -eq 1 ]; then
-				echo "$(date): SkelePipeline_Part$Part.sh failed for Field $f. Exiting Master."
-				printf "$(date): SkelePipeline_Part$Part.sh failed for Field $f. Exiting Master." > $pipeline_DIR/Error_Reports/Error_Report.txt
-				printf " -----------------------------------------------------------------------" > $pipeline_DIR/Error_Reports/Error_Report.txt
-				wait # for other LOS to finish/fail
-	    		exit 1
-			fi
+		$pipeline_DIR/SkelePipeline_Part"$Part".sh $RUN $paramfile $f $los_end $paramfile2 &
+		
+		# Exit if there's a problem - NOTE. Doesnt always work, since it may take time to hit an error
+		# ...whereas the pipeline has already moved onto commence subsequent LOS runs.
+		if [ $? -eq 1 ]; then
+			echo "$(date): SkelePipeline_Part$Part.sh failed for Field $f. Exiting Master."
+			printf "$(date): SkelePipeline_Part$Part.sh failed for Field $f. Exiting Master." > $pipeline_DIR/Error_Reports/Error_Report.txt
+			printf " -----------------------------------------------------------------------" > $pipeline_DIR/Error_Reports/Error_Report.txt
+			wait # for other LOS to finish/fail
+    		exit 1
 		fi
-
-
 
 
 		counter=$((counter+1));

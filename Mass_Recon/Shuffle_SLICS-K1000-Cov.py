@@ -7,14 +7,13 @@
 import numpy as np
 import sys
 
-config = 0
+config = int(sys.argv[1]) # 0
 # This is saved as part of the name for the output,
 # which is a numpy array shaped ~[Nlos, Nregions],
 # which tells you what LOS you should read in for each
 # region and survey realisation.
 # You could alter the way that the LOS are shuffled
 # by altering config in the range [0,216]
-
 
 # assemble the LOS (74-->292, excluding 198&199)
 los = np.arange(74,293)
@@ -41,7 +40,7 @@ for i in range(Nlos):
 
 # Now start shuffling:
 
-# if congig=0 then the result will be:
+# if config=0 then the result will be:
 # shift all Region 1 LOS up by 0,
 # ..... all Region 2 LOS up by 1, etc.
 # and any LOS that go above 292, we shift
@@ -86,7 +85,7 @@ new_survey[ np.where(new_survey>los.max()) ] += ( los.min() - los.max() -1 )
 #  and each LOS appears only once down the columns, meaning
 #  that every LOS and region are used):
 # [ 74, 75, 76, ...., 91 ]
-# [ 75, 76, 77, ...., 72 ]
+# [ 75, 76, 77, ...., 92 ]
 # [ ................ ]
 # [ ................ ]
 # [ 291,292, 74, ......, 89 ]

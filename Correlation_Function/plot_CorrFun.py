@@ -37,21 +37,21 @@ classdir = pipeline_DIR + "/ShowSumClass"
 sys.path.insert(0, classdir) # add directory in which classes & functions 
 							 # are defined to the python path
 from ClassWarfare import Filter_Input, Handle_CF_Files
-from FunkShins import Sort_Array_IntoGroups
+from FunkShins import Sort_Array_IntoGroups, Combine_zbin_DIRname
 
-CrossCorr = False       # If True, reads in a second param file corresponding to another z bin,
+CrossCorr = True       # If True, reads in a second param file corresponding to another z bin,
                        # it assembles the name of the cross-corr directory and averages THOSE CFs.
 
 if CrossCorr:
 	print("plot_CorrFun.py is set up to average the CROSS-CORRELATION CFs. Expecting two paramfiles to be inputted.")
-	variable = Filter_Input(sys.argv[:-1])                     # omitting the 2nd paramfile
-	variable_extra = Filter_Input(sys.argv[0:2]+[sys.argv[-1]]+sys.argv[3:5])  # omitting the 1st paramfile
+	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los_start, los_end = Combine_zbin_DIRname( sys.argv )
 else:
 	variable = Filter_Input(sys.argv)
+	variable.Filter()
+	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los_start, los_end = variable.Unpack_Sims()
         
-variable.Filter()
 RUN = sys.argv[1]
-
+print(DIRname)
 
 TC='Y' 					# If TC='Y', then this will average/plot TreeCorr instead of Athena
 Components_Calc = "N"	# If the delta-shear and deltaXORIG-shear files exist, AND it's a Sims_Run, this will be changed.
@@ -69,17 +69,17 @@ else:
 	xip_col=1
 	w_col=7
 
-if RUN == 'Sims_Run':
-
-	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los_start, los_end = variable.Unpack_Sims()
-	frac_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlFrac.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname, name, gpam, SS, sigma))
-	vol_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlVol.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname, name, gpam, SS, sigma))
+if RUN == 'Sims_Run' or RUN == 'KiDS_Run':
 
 	if CrossCorr:
-		_,_,DIRname_ex,_,_,SN_ex,_,_,_,_, zlo_ex,zhi_ex,_,_,_,_ = variable_extra.Unpack_Sims()
-		DIRname = DIRname.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname_ex.split('ZBcut')[-1]
-		print("Cross-corr DIRname is:", DIRname)
-                
+		# read clip-frac files from just one dz direc:
+		variable0 = Filter_Input(sys.argv[:-1])
+		_,_,DIRname0,_,_,_,_,_,_,_,_,_,_,_,_,_ = variable0.Unpack_Sims()
+	else:
+		DIRname0 = DIRname
+	frac_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlFrac.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname0, name, gpam, SS, sigma))
+	vol_files = glob.glob('%s/Correlation_Function/%s/Clipped_PxlVol.%s.%sGpAM.LOS*.SS%s.%ssigma.txt' %(pipeline_DIR, DIRname0, name, gpam, SS, sigma))
+
 	indir='%s/%sCorrelation_Function/%s/ThBins%s/' %(data_DIR, Tree, DIRname, ThBins)
 	# Group the input files
 	files_uc = glob.glob('%s%s.%sGpAM.LOS*.ORIG.CorrFun.asc'%(indir,name,gpam))
@@ -139,69 +139,6 @@ if RUN == 'Sims_Run':
 
 	print('You have selected \n TreeCorr?: %s, \n Mock run: %s, \n Shape Noise: %s, \n Masking: %s, \n Gal. density: %s, \n F-Scale: %s Pxls, \n Clip threshold: %s, \n n(z): %s, \n zlow: %s, \n zhigh %s, \n Athena bins: %s, \n Output filename: %s, \n Output Subdir: %s, \n LOS start: %s, \n LOS end: %s, \n' %(TC, sqdeg, SN, mask, gpam, SS, sigma, z, zlo, zhi, ThBins, name, DIRname, los_start, los_end) )
 
-
-else:
-	
-	DIRname, Blind, SS, sigma, zlo, zhi, ThBins, OATH, Dummy = variable.Unpack_KiDS()
-	# check if multiple fields are given as input
-	Field=[]
-	arguments = sys.argv[3:]
-	try:
-		los_end = int(arguments[-1])
-	except ValueError:
-		los_end = -1
-	try:
-		los = int(arguments[-2])
-	except (ValueError, IndexError):
-		los = -1
-	for f in arguments:
-		if list(f)[0] == 'G':
-			if "NOISE" in DIRname and los >= 0 and los_end >= 0:
-				for nn in range(los, los_end+1): 
-					Field.append('%s_NOISE%s'%(f,nn))
-			else:
-				Field.append(f)
-
-
-	#arguments = sys.argv[3:]
-	#Field = []
-	#for f in arguments:
-	#	if list(f)[0] == 'G':
-	#		Field.append(f)
-
-	indir='%s/%sCorrelation_Function/%s/ThBins%s/' %(data_DIR, Tree, DIRname, ThBins)
-	# Group the input files and print some stuff to screen
-
-	files_uc=[]
-	files_c=[]
-	frac_files=[]
-	vol_files=[]
-	filename='' # the beginning part of output filenames
-				# ='G*G*G*...' depending on number of fields
-	Field_Count=0 # count how many fields you ran on... use this to determine the no. of noise realisations
-	print('You have selected Field(s):')
-	for f in Field:
-		print('%s '%f)
-		files_uc.append('%s/%s.Blind%s.ORIG.CorrFun.asc' %(indir,f,Blind))
-		files_c.append('%s/%s.Blind%s.SS%s.rCLIP_%ssigma.CorrFun.asc' %(indir,f,Blind,SS,sigma))
-		frac_files.append('%s/Correlation_Function/%s/Clipped_PxlFrac.%s.Blind%s.SS%s.%ssigma.txt' %(pipeline_DIR,DIRname,f,Blind,SS,sigma))
-		vol_files.append('%s/Correlation_Function/%s/Clipped_PxlVol.%s.Blind%s.SS%s.%ssigma.txt' %(pipeline_DIR,DIRname,f,Blind,SS,sigma))
-
-		strip_name = f.split('_NOISE')[0]
-		if strip_name not in filename:
-			filename = filename + strip_name
-			Field_Count+=1 # keep counting the fields thtat went int it
-	if 'NOISE' in DIRname:
-		filename = filename + '_NOISE%s' %int(len(Field)/Field_Count)
-
-	print('TreeCorr? %s \nBlind %s \nF-scale %s Pxls, \nclip threshold %s sigma, \nzlow: %s, \nzhigh: %s, \nTheta Bins: %s' %(TC,Blind,SS,sigma,zlo,zhi,ThBins))
-	
-
-	outdir=indir
-
-	combined_name = '%s/%s.Blind%s'%(outdir, filename, Blind)
-	NLOS=len(Field)
-	z='KiDSData'
 		
 
 
@@ -377,8 +314,8 @@ colour_array = ['magenta', 'darkblue']
 
 
 # The plotting bit
-#Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
-#Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
+Clip_Class.Plot_CFs(stack_theta, stack_CFp, stack_errCFp, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '+')
+Clip_Class.Plot_CFs(stack_theta, stack_CFm, stack_errCFm, legend_array, colour_array, '%s.SS%s.rCLIP_%ssigma'%(combined_name,SS,sigma), '-')
 
 stack_errCFp = np.stack((errCFp_c, np.zeros(len(theta)) ))
 stack_errCFp_cuc = np.stack((errCFp_cuc, np.zeros(len(theta)) ))

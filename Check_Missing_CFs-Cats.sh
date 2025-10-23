@@ -5,7 +5,7 @@
 
 mock_Type="cosmoSLICS" # or "cosmoSLICS"
 
-Launch_Specific_LOS="True" #"True" / "False"
+Launch_Specific_LOS="False" #"True" / "False"
 
 # If False, it runs everything from the missing LOS to the end (incl all noise realisations
 # If True, it runs launches jobs with specific LOS and noise realisations
@@ -22,16 +22,33 @@ else
 fi
 
 
-Check_IA="False" # Look for the maps contaminated by IAs
-if [ "$Check_IA" == "True" ]; then
-    echo " !!! SEARCHING FOR THE IA-CONTAMINATED MEASUREMENTS !!! "
-    IA_Tag="IA0.0_" # (else it's blank)
+Check_Sys="dz" # "IA", "BaryON", "BaryOFF", "dz" or "None"
+               #Look for the maps contaminated by systematics 
+if [ "$Check_Sys" == "IA" ]; then
+    echo " !!! SEARCHING FOR THE IA MEASUREMENTS !!! "
+    ia=$2
+    Sys_Tag="IA${ia}_" 
+    los_start=1
+    los_end=50
+
+elif [[ "$Check_Sys" == *"Bary"* ]]; then
+    echo " !!! SEARCHING FOR THE ${Check_Sys} MEASUREMENTS !!! "
+    Sys_Tag="${Check_Sys}_"
+    los_start=0
+    los_end=9
+
+elif [ "$Check_Sys" == "dz" ]; then
+    echo " !!! SEARCHING FOR THE ${Check_Sys} MEASUREMENTS !!! "
+    dz=$2
+    Sys_Tag="dz${dz}_"
+    los_start=74
+    los_end=74
 fi
 
 
 MRres="140.64arcs" # 60arcsec
 SS=2.816 #3.11, 9.33, 18.66
-Mask="Mosaic"
+Mask="Mosaic" #"NoMask" #"Mosaic"
 if [ "$Mask" == "Mosaic" ]; then
     filetag="Mosaic"
     missing_los=(198 199) # Mosaic mocks have different missing LOS.
@@ -57,7 +74,7 @@ param_dir=/home/bengib/Clipping_Pipeline/param_files
 TCdir=/home/bengib/Clipping_Pipeline/Correlation_Function
 
 nn_start=0
-nn_end=19  # range of noise realisations to cycle through
+nn_end=9  # range of noise realisations to cycle through
 nn=0
 
 RR_start=1
@@ -69,8 +86,8 @@ config=config_auto_${index}.txt
 count=0
 for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.ThetaX_ThetaY_e1_e2_w.Std.asc"; do
     echo " FILE_TYPE: $file_type "
-    #for i in fid; do
-    for i in `seq 0 24`; do   
+    for i in fid; do
+    #for i in `seq 0 24`; do   
 	echo "--------------------------- COSMOL $i ----------------------------------------"
 	for j in `seq 0 4`; do
 	    echo " xxxxxxxxxxxxxxxxxxxxxxx ${ZBcut[$j]} xxxxxxxxxxxxxxxxxxxxxx";
@@ -82,20 +99,27 @@ for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.The
 		
 		    # This line skips the missing SLICS los
 		    for item in ${missing_los[*]}; do if [[ "$los" -eq "$item" ]]; then los=$((los+1)); fi; done
-		
+	  
 
 		    if [ "$mock_Type" == "SLICS" ]; then
 			# normal CF
-			f=${TCdir}/MRres${MRres}_${IA_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.${file_type}
+			#f=${TCdir}/MRres${MRres}_${Sys_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.${file_type}
 
+                        # noise-real. SLICS map:
+			f=${TCdir}/MRres${MRres}_100Sqdeg_SNCycle_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}n${nn}.${file_type}
+			
 			# a pure noise CF
-			#f=${TCdir}/MRres${MRres}_${IA_Tag}100Sqdeg_NOISE_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/NOISE_${filetag}.${Survey}GpAM.LOS${los}R${RR}.${file_type}
+			#f=${TCdir}/MRres${MRres}_${Sys_Tag}100Sqdeg_NOISE_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}/NOISE_${filetag}.${Survey}GpAM.LOS${los}R${RR}.${file_type}
+			
 		    else
 			# all the noise realisations
-			#f=${TCdir}/MRres${MRres}_${IA_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}n${nn}.${file_type}
+			#f=${TCdir}/MRres${MRres}_${Sys_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}n${nn}.${file_type}
 
 			# one noise real. per LOS
-			f=${TCdir}/MRres${MRres}_${IA_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.${file_type}
+			f=${TCdir}/MRres${MRres}_${Sys_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}R${RR}.${file_type}
+
+			# one noise real. NOT MOSAIC:
+			#f=${TCdir}/MRres${MRres}_${Sys_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_z${Survey}_${ZBlabel}_Cosmol${i}/SN${SN[$j]}_${filetag}.${Survey}GpAM.LOS${los}.${file_type}
 			
 		    fi
 
@@ -105,13 +129,15 @@ for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.The
 			#paramfile1=$param_dir/100Sqdeg_NOISE_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
 
 			# cosmoSLICS - all the noise real.
-			#paramfile1=$param_dir/${IA_Tag}100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
+			#paramfile1=$param_dir/${Sys_Tag}100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			# cosmoSLICS - one noise real. per LOS.
-			paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
+			paramfile1=$param_dir/${Sys_Tag}100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_Cosmol${i}_MRres${MRres}ec
 			
 
-			# SLICS
+			# SLICS - one noise real. per LOS. 
 			#paramfile1=$param_dir/100Sqdeg_SN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
+			# SLICS - all the noise real.
+			#paramfile1=$param_dir/100Sqdeg_CycleSN${SN[$j]}_${Mask}_${Survey}GpAM_X3sigma_SS${SS}_z${Survey}_ZBcut${ZBcut[$j]}_ThBins9_MRres${MRres}ec
 			#ls $paramfile1
 
 			# This bit of code re-launches SPECIFIC los and noise realisations
@@ -136,7 +162,7 @@ for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.The
 			    echo "$count ${paramfile1}_tmp${r} $los $los" >> $config
 			    			    
 			else
-			    #echo $f
+			    echo $f
 			    echo $i ${SN[$j]} ${ZBcut[$j]} ${SS} ${los}R${RR} #${los_end}
 			    count=$((count+1))
 			    # auto-bin
@@ -147,6 +173,7 @@ for file_type in "SS${SS}.rCLIP_X3sigma.ThetaX_ThetaY_e1_e2_w.Std.asc" "ORIG.The
 			fi
 			
 		    fi
+		#done
 		done
 		#python Correlation_Function/plot_CorrFun.py Sims_Run $paramfile1 $los_start $los_end $paramfile2
 		#break

@@ -24,9 +24,23 @@ los_end=$4
 R_start=$5
 R_end=$6
 
+n_start=$7
+n_end=$8
+
+
 for los in `seq $los_start $los_end`; do
     for R in `seq $R_start $R_end`; do
-	los_R=${los}R${R}
-	python Tree_Correlation_Function/TreeCorr_CorrFun_CrossCorr.py Sims_Run $paramfile1 $los_R $los_R DUMMY Sims_Run $paramfile2 $los_R $los_R
+#	for nn in `seq $n_start $n_end`; do
+
+	    los_R=${los}R${R} #n${nn}
+	    python Tree_Correlation_Function/TreeCorr_CorrFun_CrossCorr.py Sims_Run $paramfile1 $los_R $los_R DUMMY Sims_Run $paramfile2 $los_R $los_R
+	    
+#	done
     done
 done
+
+
+#for los in `seq $los_start $los_end`; do
+#    python Tree_Correlation_Function/TreeCorr_CorrFun_CrossCorr.py Sims_Run $paramfile1 $los $los DUMMY Sims_Run $paramfile2 $los $los
+#done
+

@@ -9,9 +9,9 @@
 # - awk line; $2, $3, $4, $5 for X-maps; $2, $3, $4 for auto.
 
 # THE INPUT SHOULD HAVE THE HEADER REMOVED!
-input=config_S_Noise.txt
+input=config_X_NOISE_NoMask.txt
 output=${input}_rand
-nrows=275
+nrows=730
 
 # shuffle the order of the rows:
 awk 'BEGIN {srand()} {print rand(), $0}' $input | sort -n | cut -d ' ' -f2- > randomfile.txt

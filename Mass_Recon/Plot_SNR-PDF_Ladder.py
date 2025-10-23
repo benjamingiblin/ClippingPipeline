@@ -29,9 +29,8 @@ else:
     filetag = 'test'
 
 PDForCUM = 'PDF' # Plot PDF or cumul(PDF): "PDF" or "cumPDF"
-Plot_Ratio = False # Plot the ratio of measurements to the fiducial cosmol.
+Plot_Ratio = True # Plot the ratio of measurements to the fiducial cosmol.
 
-A_IA = 0.0  # Intrinsic alignment amplitude
 Shuffle_Config = 0 # The seed used to shuffle the LOS&R in SLICS
 
 SS=2.816 # 1.408 2.816 5.631 ... #3.11 9.33 18.66
@@ -55,27 +54,61 @@ elif PDForCUM == 'cumPDF':
 # Read in PDF's for all zbin combinations
 Survey = 'KiDS1000'
 if Survey == 'KiDS1000':
-    #noise = [ 'SN0.27', 'SN0.258', 'SN0.273', 'SN0.254', 'SN0.27']
-    noise = [ 'SN0.265' ]
-    #NLOS = 3906 #715
+    noise = [ 'SN0.27', 'SN0.258', 'SN0.273', 'SN0.254', 'SN0.27']
+    noise_KiDS = [ 'SNKiDS', 'SNKiDS', 'SNKiDS', 'SNKiDS', 'SNKiDS']
+    # to read in SNKiDS-cosmoSLICS, need to change indir & filename below.
+    #noise = [ 'SN0.265' ]
+    NLOS = 2170
 elif Survey == 'LSST':
     noise = [ 'SN0.28', 'SN0.28', 'SN0.28', 'SN0.28', 'SN0.28']
     #NLOS = 616
-#ZBcut = ['0.1-0.3', '0.3-0.5', '0.5-0.7', '0.7-0.9', '0.9-1.2']
-ZBcut = ['0.1-1.2']
+ZBcut = ['0.1-0.3', '0.3-0.5', '0.5-0.7', '0.7-0.9', '0.9-1.2']
+#ZBcut = ['0.1-1.2']
 
-nkbins = 2000 #2000 #4
+nkbins = 4 #2000 #4
 nzbins_auto = len(noise)
 nzbins = nzbins_auto * (nzbins_auto + 1) // 2
 PDFs = np.zeros([ len(cosmol), nzbins, nkbins ])
 
-PDFs_data = np.zeros([ nzbins, nkbins ])
-PDFs_data2 = np.zeros([ nzbins, nkbins ])
-PDFs_data3 = np.zeros([ nzbins, nkbins ])
+PDFs_data = np.zeros([ nzbins, nkbins ]) # read in n store SLICS data vector
+PDFs_KiDS = np.zeros_like( PDFs_data )
+
+# Read in Sys measurements:
+Plot_Sys = True
+Sys = "IA" # IA / BaryON / dz
+if Sys=="IA":
+    Sys_vals = [0.0] #[-3.0, -1.0, 0.0, 1.0, 3.0] #np.arange(-6., 7.0) # actual vals to use for colour scale
+    Sys_labs = [0.0] #[-3.0, -1.0, 0.0, 1.0, 3.0] #np.arange(-6., 7.0) # what they'll be labelled as in legend
+    Sys_files= ['IA0.0'] #['IA-3.0', 'IA-1.0', 'IA0.0', 'IA1.0', 'IA3.0'] #np.arange(-6., 7.0) # differences in filename
+    leg_Label = r'$A_{\rm IA}=$'
+    c_offset = 0 #2 # helps to get colour of Sys lines visible
+    
+elif Sys=="dz":
+    Sys_vals = [-0.8980,-0.2293,0.,0.2623,0.8254]
+    Sys_labs = [-0.90,-0.23,0.,0.26,0.83]
+    Sys_files= ['dz5','dz3','dz0','dz4','dz2']  
+    leg_Label = r'$\delta_z/\sigma_z=$'
+    c_offset = 0 #0.5
+
+elif Sys=="BaryON":
+    Sys_vals = [0, 1]
+    Sys_labs = ["Baryons", "DM-only"]
+    Sys_files= ["BaryON", "BaryOFF"]
+    leg_Label = ''
+    c_offset = 0 #0.5
+    
+PDFs_Sys = np.zeros([ len(Sys_vals), nzbins, nkbins ])
+PDFs_SLC = np.zeros([ nzbins, nkbins ]) # impact of source-lens clustering given by diff
+PDFs_SLC0 = np.zeros([ nzbins, nkbins ])# in IA0 and fid cosmoSLICS (both non-mosaic) - ONLY USED FOR Sys=IA
+
+PDFs_Noise1 = np.zeros([ nzbins, nkbins ]) # Gauss Noise
+PDFs_Noise2 = np.zeros([ nzbins, nkbins ]) # KiDS-Noise
+
+# given by the difference of cosmoSLICS-fid and IA0.0
 PDFs_err  = np.zeros([ nzbins, nkbins ])
 
-PDFs_fid_mod = np.zeros_like( PDFs_data )  # the fid PDF scaled to include IA
-PDFs_fid_mod2 = np.zeros_like( PDFs_data ) # same, but IA contribution is additive      
+PDFs_fid_mod = np.zeros_like( PDFs_data )  # the fid PDF scaled to include Sys
+PDFs_fid_mod2 = np.zeros_like( PDFs_data ) # same, but Sys contribution is additive      
 
 for c in range(len(cosmol)):
     k=0
@@ -91,47 +124,56 @@ for c in range(len(cosmol)):
             x_array, PDFs[c,k,:] = np.loadtxt(filename, usecols=(0,1), unpack=True)
 
             if c == len(cosmol)-1 and Survey == 'KiDS1000':
-                filename_data = filename.replace('_Cosmol%s' %cosmol[-1], '')
-                filename_data = filename_data.replace('LOSAll', 'LOSAll-Shuffle%s' %Shuffle_Config)
-                # read in the IA vector:
-                #filename_data = indir.replace('%s_'%MRres, '%s_IA%s_'%(MRres,A_IA)) + '/%s_%s.%sGpAM.LOSAll.SS%s.SNR%sPDF_%sbins.dat' %(noise[i],filetag,Survey,SS, stat_keyword,nkbins)
+                # KiDS-1000:
+                filename_KiDS = filename.replace('%s_'%noise[i], 'SNKiDS_').replace('_Cosmol%s' %cosmol[-1], '_CosmolKiDS1000')
+                # SLICS OR Trial42 (changed as you prefer)
+                filename_data = filename.replace('_Cosmol%s' %cosmol[-1], '').replace('SNKiDS',noise[i])
+                #'_CosmolTrial42-NOISE0' )
+                filename_data = filename_data.replace('LOSAll', 'LOSAll-Shuffle%s' %Shuffle_Config) # for SLICS only
+
+                # NOISE (Gauss & KiDS)
+                filename_Noise1 = filename.replace('%s_'%noise[i], 'NOISE_').replace('_Cosmol%s' %cosmol[-1], '').replace('LOSAll', 'LOSAll-Shuffle0')
+                filename_Noise2 = filename_Noise1.replace('NOISE_', 'NOISE-KiDS_')
+                
+                # Cov:
+                filename_cov = filename_data.replace('_%s'%noise[i],'_SNCycle')
+                filename_cov = filename_cov.replace('LOSAll', 'NLOS%s' %NLOS)                                                            
+                filename_cov = filename_cov.replace('.dat', '.CovMat.npy') 
+                
+                # read in the Sys vector:
+                if Plot_Sys:
+                    for s in range(len(Sys_vals)):
+                        # Use this to select Sys-contam'd mosaic mocks (perf'd by Make_PDFs_NonMosaic):
+                        tmp_bias = '.bias%s-added.dat'%Sys_files[s]
+                        filename_sys = filename.replace('.dat', tmp_bias)
+                        PDFs_Sys[s,k,:] = np.loadtxt( filename_sys, usecols=(1,), unpack=True )
+                    if Sys=="IA" and Sys_labs[s]==0.0:
+                        # the IA mocks contain source-lens clustering:
+                        filename_slc = filename_sys.replace('MRres140.64arcs_','MRres140.64arcs_SLC1.25_').replace('Mosaic_Ki','NoMask_Ki').replace('Mosaic.K','test.K').replace('bias%s-added.dat'%Sys_files[s],'dat')
+                        filename_slc0 = filename_slc.replace('_SLC1.25','')
+                        PDFs_SLC[k,:] = np.loadtxt( filename_slc, usecols=(1,), unpack=True )
+                        PDFs_SLC0[k,:] = np.loadtxt( filename_slc0, usecols=(1,), unpack=True )
+                        
                 #print( filename_data )
                 PDFs_data[k,:] = np.loadtxt( filename_data, usecols=(1,), unpack=True )
-
-                #filename_data2 = filename_data.replace('_IA%s_'%A_IA, '_IA1.0_')
-                #PDFs_data2[k,:] = np.loadtxt( filename_data2, usecols=(1,), unpack=True )
-                
-                #filename_cov = filename.replace('SNCycle', noise[i]) # DONT NEED THIS NOW NOT DOING SNCycle
-                #filename_cov = filename.replace('_Cosmolfid', '')
-                # read in SLICS data vector
-                #filename_data3 = filename_cov
-                #PDFs_data3[k,:] = np.loadtxt( filename_data3, usecols=(1,), unpack=True )
-                
-                #filename_cov = filename_cov.replace('LOSAll', 'NLOS%s' %NLOS)
-                #filename_cov = filename_cov.replace('.dat', '.CovMat.npy')
-                #print( filename_cov )
-                PDFs_err[k,:] = np.zeros(nkbins) #np.sqrt( np.diag( np.load(filename_cov) ) / 10. ) # scaled from 100 --> 1000 deg^2
-
-                # manually add the IA contribution to the fid cosmology and save it:
-                #PDFs_fid_mod[k,:] = PDFs[-1,k,:] * ( PDFs_data2[k,:]/PDFs_data[k,:] )
-                #PDFs_fid_mod2[k,:] = PDFs[-1,k,:] + ( PDFs_data2[k,:]-PDFs_data[k,:] )
-                # save the modified data
-                #filename_mod = filename.replace('%sbins.dat' %nkbins, '%sbins.IA1.0-scaled.dat' %nkbins)
-                #filename_mod2 = filename.replace('%sbins.dat' %nkbins, '%sbins.IA1.0-added.dat' %nkbins)
-                #print( filename_mod )
-                #print(filename_mod2)
-                #print("----------------")
-                #np.savetxt( filename_mod, np.c_[x_array,PDFs_fid_mod[k,:]] )
-                #np.savetxt( filename_mod2, np.c_[x_array,PDFs_fid_mod2[k,:]] )
-                
-                
+                PDFs_KiDS[k,:] = np.loadtxt( filename_KiDS, usecols=(1,), unpack=True )
+                # save an SLC-corrected KiDS measurement?
+                if Plot_Sys and Sys=="IA" and Sys_labs[s]==0.0:
+                    np.savetxt(filename_KiDS.replace('.dat', '.SLC1.25-corrected.dat'),
+                               np.c_[x_array, (PDFs_KiDS-PDFs_SLC+PDFs_SLC0)[k,:]],
+                               header='SLC correction applied additively')
+                    
+                #PDFs_Noise1[k,:] = np.loadtxt( filename_Noise1, usecols=(1,), unpack=True )
+                #PDFs_Noise2[k,:] = np.loadtxt( filename_Noise2, usecols=(1,), unpack=True )
+                PDFs_err[k,:] = np.sqrt( np.diag( np.load(filename_cov) ) )
             k+=1
 
 #sys.exit()
             
 def Ladder_Plot(x_array, y_array,
                 y_array_data, y_array_err,
-                #y_array_data2, y_array_data3,
+                y_array_data2, 
+                y_array_sys, y_array_slc, # probes SLC in IA mocks
                 n_row_col, x_label, y_label, x_lims, y_lims, savename):
 
     fig = plt.figure(figsize = (19,10)) #figsize = (13.5,10)
@@ -148,27 +190,51 @@ def Ladder_Plot(x_array, y_array,
                 # Dont plot panels above the diagonal                                                                        
                 ax1.axis('off')
             else:
+                # MAKE cosmoSLICS a FILLED REGION
+                upper = np.zeros(len(x_array))
+                lower = np.zeros(len(x_array))
+                for x in range(len(x_array)):
+                    upper[x] = y_array[:,d,x].max()
+                    lower[x] = y_array[:,d,x].min()
+                plt.fill_between(x_array, lower, upper, color='dimgrey') #, alpha=0.5)
+                
                 for c in range(y_array.shape[0]):
                     if Plot_Ratio:
                         #if pcosmo[c] in [0.6101, 0.6615, 0.7232, 0.7821, 0.8321, 0.8947]:
                             # plot only the most extreme S8's:
-                        ax1.plot( x_array, y_array[c,d,:], color=s_m2.to_rgba(diff_pcosmo[c]) )
+                        ax1.plot( x_array, y_array[c,d,:], color='dimgrey') #color=s_m2.to_rgba(diff_pcosmo[c]) )
                             #continue
                     else:
                         ax1.plot( x_array, y_array[c,d,:], color=s_m.to_rgba(pcosmo[c]) )
-
-                # plot IA vs non-IA
+                
+                handles = []
+                # plot Sys vs non-Sys
+                if Plot_Sys:
+                    for s in range(len(Sys_vals)):
+                        ax1.plot( x_array, y_array_sys[s,d,:], color=s_m3.to_rgba(Sys_vals[s]), linewidth=4 )
+                        handles.append( mlines.Line2D([], [], color=s_m3.to_rgba(Sys_vals[s]),
+                                                      linestyle='-', label=leg_Label+r'%s' %(Sys_labs[s]) ))
+                    if Sys=="IA" and Sys_labs[0]==0.0:
+                        # plot the SLC measurement
+                        s=0 # just the IA0 result
+                        ax1.plot( x_array, y_array_slc[d,:], color='pink', linewidth=4, linestyle=':' )
+                        handles.append( mlines.Line2D([], [], color='pink', linestyle=':', linewidth=4,label='SLC') )
+                    
+                        
                 #ax1.plot( x_array, y_array[-1,d,:], color='dimgrey', linewidth=2 )
-                #ax1.plot( x_array, y_array_data[d,:], color='magenta', linewidth=2 )
+                ax1.errorbar( x_array, y_array_data[d,:], yerr=y_array_err[d,:], color='magenta', linewidth=2 )
+                ax1.errorbar( x_array, y_array_data2[d,:], yerr=y_array_err[d,:],
+                              color='magenta', linestyle='--', linewidth=2 )
+                # if we scale KiDS-PDFs by (Gauss-Noise/KiDS-Noise), does it look more like sims? NO! Sadly.
+                #ax1.errorbar( x_array, y_array_data[d,:] * (PDFs_Noise1/PDFs_Noise2)[d,:],
+                #              yerr=y_array_err[d,:], color='cyan', linestyle='--',linewidth=2 )
                 #ax1.plot( x_array, y_array_data2[d,:], color='cyan', linewidth=2 )
                 #ax1.plot( x_array, y_array_data3[d,:], color='dimgrey', linewidth=2 )
                 
-                handles = []
-                #handles.append( mlines.Line2D([], [], color='magenta', linestyle='-', label=r'$A_{\rm IA}=0.0$' ))
+                #handles.append( mlines.Line2D([], [], color='magenta', linestyle='-', label=r'KiDS-1000' ))
+                #handles.append( mlines.Line2D([], [], color='magenta', linestyle='--', label=r'Trial42-NOISE0' ))
                 #handles.append( mlines.Line2D([], [], color='cyan', linestyle='-', label=r'$A_{\rm IA}=1.0$' ))
-                handles.append( mlines.Line2D([], [], color='dimgrey', linestyle='-', label=r'SLICS' ))
-                
-                #ax1.errorbar( x_array, y_array_data[d,:], yerr=y_array_err[d,:]/1e4, color='magenta', linewidth=2 )
+                #handles.append( mlines.Line2D([], [], color='dimgrey', linestyle='-', label=r'SLICS' ))
 
                 ax1.text( 0.60, 0.8, r'%s-%s' %(j+1,i+1),
                                  horizontalalignment='left', verticalalignment='center', transform=ax1.transAxes)
@@ -195,8 +261,8 @@ def Ladder_Plot(x_array, y_array,
     else:
         fig.colorbar(s_m, cax=cbar_ax, label=r'$%s$' %cbar_label)
 
-    # if plotting the IA
-    #fig.legend(handles=handles, loc='upper center', frameon=False)
+    if Plot_Sys:
+        fig.legend(handles=handles, loc='upper center', frameon=False)
 
     plt.savefig(savename)
     plt.show()
@@ -224,7 +290,15 @@ norm2 = matplotlib.colors.Normalize(vmin=diff_pcosmo.min(), vmax=diff_pcosmo.max
 s_m2 = matplotlib.cm.ScalarMappable(cmap=c_m, norm=norm2)
 s_m2.set_array([])
 
+# also make one for colour-coding by Sys:
+# setting low lim to IA.min()-2, so no line is WHITE
+norm3 = matplotlib.colors.Normalize(vmin=min(Sys_vals)-c_offset, vmax=max(Sys_vals))
+c_m3 = matplotlib.cm.cool #Greys
+s_m3 = matplotlib.cm.ScalarMappable(cmap=c_m3, norm=norm3)
+s_m3.set_array([])
+
 y_limits= None #[-0.05, 1.05]
+#sys.exit()
 
 if SS==3.11 or SS==1.408:
     alpha = 0.0 # plotting SNR^alpha x PDF
@@ -258,41 +332,43 @@ elif SS == 84.85:
     if PDForCUM == 'PDF':
         y_limits=[0,19]
 
+
 if Plot_Ratio:
     # set limits to appropriate percentage difference:
-    y_limits=[-19,19]
-    Ratios = np.zeros_like(PDFs)
-    Ratios_data = np.zeros_like(PDFs_data)
-    Ratios_data2 = np.zeros_like(PDFs_data)
-    Ratios_data3 = np.zeros_like(PDFs_data)
-    Ratios_mod   = np.zeros_like(PDFs_data)
-    Ratios_err  = np.zeros_like(PDFs_err)
-
-    k = 0
-    for i in range(len(noise)):
-        for j in range(i, len(noise)):
-            for c in range(PDFs.shape[0]):
-                Ratios[c,k,:] = PDFs[c,k,:] / PDFs[-1,k,:]
-            Ratios_data[k,:] = PDFs_data[k,:] / PDFs[-1,k,:]
-            #Ratios_data2[k,:] = PDFs_data2[k,:] / PDFs[-1,k,:]
-            #Ratios_data3[k,:] = PDFs_data3[k,:] / PDFs[-1,k,:]
-            #Ratios_mod[k,:]   = PDFs_fid_mod2[k,:] / PDFs[-1,k,:]
-            Ratios_err[k,:] = PDFs_err[k,:] / PDFs[-1,k,:]
-            k += 1
-
+    y_limits= [-8,8] #[-1.9,1.9] #[-19,19]
+    Ratios = PDFs / PDFs[-1]
+    # marco suggests dividing by PDF_err (tried it & cant see diffs) BUT ratio looks worse because PDF small in tails
+    Ratios_data = PDFs_data / PDFs[-1]
+    Ratios_err = PDFs_err / PDFs[-1]
+    Ratios_KiDS = PDFs_KiDS / PDFs[-1]
+    
     # Get rid of the infinities and nans
     Ratios[np.where(np.isfinite(Ratios) == False)] = 1.
     Ratios_data[np.where(np.isfinite(Ratios_data) == False)] = 1.
-    #Ratios_data2[np.where(np.isfinite(Ratios_data2) == False)] = 1.
-    #Ratios_data3[np.where(np.isfinite(Ratios_data3) == False)] = 1.
-    #Ratios_mod[np.where(np.isfinite(Ratios_mod) == False)] = 1.
     Ratios_err[np.where(np.isfinite(Ratios_err) == False)] = 0.
+
+    if Plot_Sys:
+        Ratios_Sys = PDFs_Sys / PDFs[-1]
+        Ratios_Sys[np.where(np.isfinite(Ratios_Sys) == False)] = 1.
+        if Sys=="IA" and Sys_labs[s]==0.0:
+            Ratios_SLC = (PDFs[-1] + PDFs_SLC-PDFs_SLC0) / PDFs[-1]
+            Ratios_SLC[np.where(np.isfinite(Ratios_SLC) == False)] = 1.
+            Ratios_SLC[np.where(abs(Ratios_SLC) > 1e7)] = 1. # some finite, but massive
+            # can we correct the SLC in KiDS?
+            PDFs_KiDS_SLC = PDFs_KiDS -PDFs_SLC + PDFs_SLC0 # additive correction
+            #PDFs_KiDS_SLC = PDFs_KiDS *PDFs_SLC0/PDFs_SLC # multiplicative correction
+            Ratios_KiDS_SLC = PDFs_KiDS_SLC / PDFs[-1]
+            
+    else:
+        Ratios_Sys=0.
 
 
     # PLOT THE %-DIFF WITH THE FID COSMOL.
     Ladder_Plot(x_array,
-                100*(Ratios-1.), 100*(Ratios_data-1.), 100*Ratios_err,
-                #100*(Ratios_data2-1.), 100*(Ratios_data3-1.),
+                100*(Ratios-1.), 100*(Ratios_KiDS-1.), 100*Ratios_err,
+                100*(Ratios_KiDS_SLC-1.),
+                #100*(Ratios_data-1.),
+                100*(Ratios_Sys-1.), 100*(Ratios_SLC-1.),
                 len(noise), r'SNR',
                 r'$\left( {\rm PDF} - {\rm PDF}_{\rm fid} \right)/ {\rm PDF}_{\rm fid}$ '+'[%]'+r' | $\sigma_{\rm s}=$%s'%(ss_label),
                 [-1*x_limit, x_limit], y_limits,
@@ -302,12 +378,12 @@ else:
     scaling = 10**power
     Ladder_Plot(x_array,
                 #np.log10(PDFs), np.log10(PDFs_data), 0.,
-                PDFs/PDFs.mean(), PDFs_data/PDFs.mean(), PDFs_err/PDFs.mean(),
+                PDFs/PDFs.mean(), PDFs_data/PDFs.mean(), PDFs_err/PDFs.mean(), PDFs_Sys/PDFs.mean(),
                 #np.exp(PDFs*scaling), np.exp(PDFs_data*scaling), np.exp(PDFs_data*scaling)*PDFs_err*scaling,
                 len(noise), r'SNR',
                 r'${\rm PDF} / \langle {\rm PDF} \rangle$ | $\sigma_{\rm s}=$%s' %(ss_label),
                 #plot_keyword + r'$\exp\left[ {\rm PDF} \times 10^{%s} \right]$ | $\sigma_{\rm s}=$%s'%(power, ss_label),
                 [-1*x_limit, x_limit], y_limits,
-                'Figures_4_Paper/Ladder_CS-%sPDF_%s_%s_SS%s_Exp.eps' %(stat_keyword,Survey,Mask,SS) )
+                'Figures_4_Paper/Ladder_CS-%sPDF_%s_%s_SS%s.png' %(stat_keyword,Survey,Mask,SS) )
 
 

@@ -10,8 +10,8 @@ from os import getcwd
 import numpy as np
 from subprocess import call
 
-pipeline_DIR='/home/bengib/Clipping_SimsLvW/'
-data_DIR='/data/bengib/Clipping_SimsLvW/'
+pipeline_DIR='/home/bengib/Clipping_Pipeline/'
+data_DIR='/data/bengib/Clipping_Pipeline/'
 classdir = pipeline_DIR + "/ShowSumClass"
 
 sys.path.insert(0, classdir) # add directory in which classes & functions 
@@ -24,27 +24,19 @@ variable = Filter_Input(sys.argv)
 variable.Filter()
 RUN = sys.argv[1]
 
-if RUN == 'Sims_Run':
+if RUN == 'Sims_Run' or RUN == 'KiDS_Run':
 	name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo, zhi, ThBins, OATH, los, los_end = variable.Unpack_Sims()
 	combined_name = '%s.%sGpAM.LOS%s'%(name,gpam,los)
 	cn = los #config file designation
 	if sqdeg == 60 or sqdeg == 100:
-		metric='Euclidean'
-		flip_g2=True
+		metric='Euclidean' # THIS MIGHT BE WRONG FOR MOSAIC MOCKS!
+		flip_g2=True       # AND THIS COULD BE WRONG FOR KiDS...
 	elif sqdeg == 36:
 		metric='Euclidean'
 		flip_g2=False
 	else:
 		metric='Arc'	
 		flip_g2=False # not certain if this is correct for Sims
-
-else:
-	DIRname, Blind, SS, sigma, zlo, zhi, ThBins, OATH, Field = variable.Unpack_KiDS()
-	combined_name = '%s.Blind%s'%(Field,Blind)
-	cn = Field # config file designation
-	metric='Arc'
-	flip_g2=True
-
 
 if os.path.isdir('%s/Tree_Correlation_Function/%s/ThBins%s'%(data_DIR, DIRname,ThBins)) is False:
 	call(['mkdir','-p', '%s/Tree_Correlation_Function/%s/ThBins%s'%(data_DIR, DIRname,ThBins)])

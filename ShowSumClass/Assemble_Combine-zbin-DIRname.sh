@@ -17,6 +17,7 @@ DIRname2=$DIRname
 ZBcut2=$ZBcut
 zlo2=$zlo
 zhi2=$zhi
+Sys2=$Sys
 
 # extract the important info form paramfile 2:
 paramfile1=$2
@@ -26,6 +27,7 @@ DIRname1=$DIRname
 ZBcut1=$ZBcut
 zlo1=$zlo
 zhi1=$zhi
+Sys1=$Sys
 
 
 # assemble the new (combined-redshift) DIRname
@@ -41,3 +43,8 @@ done
 #for value in ${myarray[@]}; do echo "$value "; done
 DIRname=${myarray[0]}${ZBcut1}_X_ZBcut${ZBcut2}${myarray[1]}
 
+
+# Do the same for the Sys params if they're not the same (e.g. dz2 --> dz2_X_dz3)
+if [[ "$Sys1" != "$Sys2" ]]; then
+    DIRname="${DIRname/"$Sys1"/"${Sys1}_X_${Sys2}"}"
+fi

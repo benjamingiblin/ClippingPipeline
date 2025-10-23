@@ -45,20 +45,20 @@ PSm_5arcs = 1.388888888889e-03 # Pxl scale of the full res mask, deg/pxl
 # First get the MRres
 Prepend = ''.join([ i for i in list(DIRname)[0:5] if i in ['M','R','r','e','s'] ])
 if Prepend == 'MRres':
-		MRres = DIRname.split('_')[0].split('MRres')[1]
+	MRres = DIRname.split('_')[0].split('MRres')[1]
 	#result = ''.join([i for i in MRres if i.isdigit()])
-		
-		if 'arcmin' in MRres:  # pxl scale expressed in arcmins
-				result = MRres.split('arcmin')[0]
-				PSm = float(result)/60. # Pxl scale of the mask, deg/pxl
-				
-		else:                  # pxl scale expressed in arcsec
-				result = MRres.split('arcs')[0]
-				PSm = float(result)/3600.
-				
+	
+	if 'arcmin' in MRres:  # pxl scale expressed in arcmins
+		result = MRres.split('arcmin')[0]
+		PSm = float(result)/60. # Pxl scale of the mask, deg/pxl
+			
+	else:                  # pxl scale expressed in arcsec
+		result = MRres.split('arcs')[0]
+		PSm = float(result)/3600.
+			
 else:
-		MRres= '5arcs'
-		PSm = PSm_5arcs 
+	MRres= '5arcs'
+	PSm = PSm_5arcs 
 
 
 
@@ -152,50 +152,73 @@ else:
 # Decide if you want a noise-only, shear+noise, or shear-only calculation
 if SN == 'ALL' or SN == 'All' or SN == 'all' or 'Cycle' in DIRname:
 
-		# Set the noise level (not specified in param_file if doing Cycle):
-		if 'KiDS1000' in DIRname:
-				if float(zlo)==0.1 and float(zhi)==1.2:
-						SN_level=0.265
-				else:
-						# Must set SN to values measured in each KiDS1000 bin.
-					bin_edges = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.2])
-					sigma_e_values = [0.270, 0.258, 0.273, 0.254, 0.270]
-				
-					# Note: this only works for the 5 zbins used for cosmic shear.
-					idx_sig = np.where(float(zlo) == bin_edges)[0][0]
-					SN_level = sigma_e_values[idx_sig]
+	# Set the noise level (not specified in param_file if doing Cycle):
+	if 'KiDS1000' in DIRname:
+		if float(zlo)==0.1 and float(zhi)==1.2:
+			SN_level=0.265
 		else:
-				SN_level=0.28 
-						
-		print("SN_level is %s" %SN_level)
-
-		if 'Cycle' in DIRname:
-				# get noise realisation number
-				intlos = int(los.split('R')[0].split('n')[0])
-				ncycle = int(los.split('R')[-1].split('n')[-1])
-				seed1 = int( intlos + ncycle*100 + zfactor + Rfactor*7 )
-				seed2 = int( intlos + 2001 + ncycle*100 + zfactor + Rfactor*7 )
-				print("seed1 and seed2 are %s and %s"%(seed1,seed2))
-		else:
-				intlos = int(los.split('R')[0])
-				seed1 = int( intlos + zfactor + 19 + Rfactor*7 )
-				seed2 = int( intlos + 2001 + zfactor + 21 + Rfactor*7 )
-						 # made it so all cosmol have same SN.
-						 # So only diff in signal is due to cosmol.
-						 # Also noise maps have different seed to SLICS.
-				print("seed1 and seed2 are %s and %s"%(seed1,seed2))
-				e1_temp = np.zeros(len(X)) # noise-only 
-				e2_temp = np.zeros(len(X))
-				
+			# Must set SN to values measured in each KiDS1000 bin.
+			bin_edges = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.2])
+			sigma_e_values = [0.270, 0.258, 0.273, 0.254, 0.270]
 		
-		# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
-		e1_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
-		e2_rng = Generate_Unitary_Shape_Noise(seed2, SN_level)
+			# Note: this only works for the 5 zbins used for cosmic shear.
+			idx_sig = np.where(float(zlo) == bin_edges)[0][0]
+			SN_level = sigma_e_values[idx_sig]
+	else:
+		SN_level=0.28 
+					
+	print("SN_level is %s" %SN_level)
 
+	if 'Cycle' in DIRname:
+		# get noise realisation number
+		intlos = int(los.split('R')[0].split('n')[0])
+		ncycle = int(los.split('R')[-1].split('n')[-1])
+		seed1 = int( intlos + ncycle*100 + zfactor + Rfactor*7 )
+		seed2 = int( intlos + 2001 + ncycle*100 + zfactor + Rfactor*7 )
+		print("seed1 and seed2 are %s and %s"%(seed1,seed2))
+	else:
+		intlos = int(los.split('R')[0])
+		seed1 = int( intlos + zfactor + 19 + Rfactor*7 )
+		seed2 = int( intlos + 2001 + zfactor + 21 + Rfactor*7 )
+				 # made it so all cosmol have same SN.
+				 # So only diff in signal is due to cosmol.
+				 # Also noise maps have different seed to SLICS.
+		print("seed1 and seed2 are %s and %s"%(seed1,seed2))
+		e1_temp = np.zeros(len(X)) # noise-only 
+		e2_temp = np.zeros(len(X))
+			
+	
+	# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
+	e1_rng = Generate_Unitary_Shape_Noise(seed1, SN_level)
+	e2_rng = Generate_Unitary_Shape_Noise(seed2, SN_level)
+
+elif 'KiDS' in SN: 
+	# This is either running with KiDS data or mocks with KiDS-like noise. Decide which:
+	if DIRname.split('Cosmol')[-1]=='KiDS1000':
+		print("We're running with KiDS-1000 data; not adding any extra noise!")
+		e1_rng=0.
+		e2_rng=0.
+	else:
+		print("Adding KiDS-like (NOT GAUSSIAN) shape noise to the mocks!")
+		# use the KiDS1000 data for the shape noise:
+		e1data, e2data = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_e1data_e2data.dat'%(data_DIR, DIRname, name, gpam, los),
+	                                    unpack=True, usecols=(0, 1))
+		# spin!
+		intlos = int(los.split('R')[0])
+		seed1 = int( intlos + zfactor + Rfactor*7 )
+		np.random.seed(seed1)
+		# following SRT test code for KiDS1000 
+		theta = np.random.uniform(0., np.pi, len(e1data))
+		e1_rng = np.cos(2.*theta)*e1data + np.sin(2.*theta)*e2data
+		e2_rng = -1.*np.sin(2.*theta)*e1data + np.cos(2.*theta)*e2data
+		if 'ALL' in SN or 'All' in SN:
+			# kill the signal
+			e1_temp = np.zeros(len(X))
+			e2_temp = np.zeros(len(X))
 
 elif float(SN) == 0.:
-		e1_rng = 0. # shear-only
-		e2_rng = 0.
+	e1_rng = 0. # shear-only
+	e2_rng = 0.
 
 else:
 	# make it so the SN for a given LOS is ALWAYS the same, using np.random.seed
@@ -205,31 +228,38 @@ else:
 	#e2_rng = np.random.normal(0., float(SN), len(e1_temp))
 
 	# 28/05/2019 - edit to make sure ellipticities bounded by -1 and 1
-		intlos = int(los.split('R')[0])
-		seed1 = int( intlos + zfactor + Rfactor*7 )
-		seed2 = int( intlos + 2001 + zfactor + Rfactor*7 )
-		e1_rng = Generate_Unitary_Shape_Noise(seed1, float(SN))
-		e2_rng = Generate_Unitary_Shape_Noise(seed2, float(SN))		
-		print("seed1 and seed2 are %s and %s"%(seed1,seed2))
+	intlos = int(los.split('R')[0])
+	seed1 = int( intlos + zfactor + Rfactor*7 )
+	seed2 = int( intlos + 2001 + zfactor + Rfactor*7 )
+	e1_rng = Generate_Unitary_Shape_Noise(seed1, float(SN))
+	e2_rng = Generate_Unitary_Shape_Noise(seed2, float(SN))		
+	print("seed1 and seed2 are %s and %s"%(seed1,seed2))
 
 		
 ######################## SHAPE NOISE & IAs #############################
 # 28/05/2019 - edit to do more accurate contribution of SN to e_obs:
 # e = e1 + j*e2
 
-if 'Mosaic' in DIRname:
-        print("Mosaic mocks require an extra e2 sign flip; applying it here.")
+if 'Mosaic' in DIRname and "_dz" not in DIRname: 
+        print("Mosaic mocks & KiDS require an extra e2 sign flip; applying it here.") # but dz mocks data DONT want it.
         e2_temp *= -1.
 e_temp = e1_temp + 1j*e2_temp  # shear
 
 # Now add IA to shear if necessary:
-if "IA" in DIRname:
-        IA_amp = float(DIRname.split('IA')[-1].split('_')[0])
-        IA1, IA2 = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_IA1_IA2.dat'%(data_DIR, DIRname, name, gpam, los),
-                              usecols=(0,1), unpack=True)
-        e_IA = IA1*IA_amp + 1j*IA2*IA_amp # complex IA
-        # complex addition of shear and e_IA
-        e_temp = (e_IA + e_temp) / (1+ e_temp*np.conj(e_IA))
+if "IA" in DIRname or "SLC" in DIRname:
+	IA1, IA2, delta = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_IA1_IA2.dat'%(data_DIR, DIRname, name, gpam, los),
+	                             usecols=(0,1,2), unpack=True)
+	if "IA" in DIRname:
+		amp = float(DIRname.split('IA')[-1].split('_')[0]) # if IA, this is A_IA; if SLC, 
+		e_IA = IA1*amp + 1j*IA2*amp # complex IA
+		# complex addition of shear and e_IA
+		e_temp = (e_IA + e_temp) / (1+ e_temp*np.conj(e_IA))
+	elif "SLC" in DIRname:
+		amp = float(DIRname.split('SLC')[-1].split('_')[0]) # if SLC, it's b_g (Gatti+24; eqn 5)
+		# correlate the shape noise with delta:
+		e1_rng *= 1./np.sqrt(1+amp*delta)
+		e2_rng *= 1./np.sqrt(1+amp*delta)
+		e_temp *= (1+ amp*delta)/(1+1.*delta) # does nothing for amp=1
 
 # complex addition of shear and noise:
 e_rng = e1_rng + 1j*e2_rng     # noise 
@@ -237,10 +267,14 @@ e_obs = (e_rng + e_temp) / (1+ e_rng*np.conj(e_temp))
 
 
 if 'Mosaic' in DIRname:
-	print("Factoring in the m_Angus bias")
+	print("Reading in the m_Angus bias")
 	Weight, mbias = np.loadtxt('%s/Mass_Recon/%s/%s.%sGpAM.LOS%s_Xm_Ym_e1_e2_w.dat'%(data_DIR, DIRname, name, gpam, los), 
 								usecols=(4,5), unpack=True)
-	e_obs *= (1.+mbias)
+	# only apply m-bias to mocks, not data:
+	if DIRname.split('Cosmol')[-1] != 'KiDS1000':
+		e_obs *= (1.+mbias)
+	else:	
+		print("NOT applying the mbias to KiDS1000 data.")
 else:
 	Weight = np.ones_like(X)
 

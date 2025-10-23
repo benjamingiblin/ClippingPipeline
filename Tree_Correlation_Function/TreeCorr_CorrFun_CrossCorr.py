@@ -30,10 +30,7 @@ print( "Reading and filtering inputs for second file" )
 variable2 = Filter_Input(sys.argv[5:])
 variable2.Filter()
 
-
-
-
-if RUN == 'Sims_Run':
+if RUN == 'Sims_Run' or RUN == 'KiDS_Run':
         name1, gpam, DIRname1, SS, sigma, SN, mask, z, PS, sqdeg, zlo1, zhi1, ThBins, OATH, los, los_end = variable.Unpack_Sims()
         name2, gpam, DIRname2, SS, sigma, SN, mask, z, PS, sqdeg, zlo2, zhi2, ThBins, OATH, los, los_end = variable2.Unpack_Sims()
 
@@ -41,20 +38,10 @@ if RUN == 'Sims_Run':
         combined_name2 = '%s.%sGpAM.LOS%s'%(name2,gpam,los)
         cn = los #config file designation
         if sqdeg == 60 or sqdeg == 100:
-                metric='Euclidean'
+                metric='Euclidean' # NOTE BEN THIS MIGHT BE WRONG FOR MOSAIC MOCKS! PIN IN IT.
         else:
                 metric='Arc'	
         flip_g2=True # not certain if this is correct for Sims
-
-else:
-        DIRname1, Blind, SS, sigma, zlo1, zhi1, ThBins, OATH, Field = variable.Unpack_KiDS()
-        DIRname2, Blind, SS, sigma, zlo2, zhi2, ThBins, OATH, Field = variable2.Unpack_KiDS()
-        combined_name = '%s.Blind%s'%(Field,Blind)
-        cn = Field # config file designation
-        metric='Arc'
-        flip_g2=True
-
-
 
 # Make the X-correlation output directory
 if '_Cosmol' in DIRname1:
@@ -64,11 +51,17 @@ else:
         ZBcut1 = DIRname1.split('ZBcut')[-1]
         ZBcut2 = DIRname2.split('ZBcut')[-1]
 
-DIRname = DIRname1.replace('ZBcut%s'%ZBcut1, 'ZBcut%s_X_ZBcut%s'%(ZBcut1, ZBcut2), 1)
+# make the combined DIRname:
+from FunkShins import Combine_zbin_DIRname
+inputs = sys.argv[:5]
+inputs.append(sys.argv[7])
+_,_,DIRname,_,_,_,_,_,_,_,_,_,_,_,_,_ = Combine_zbin_DIRname( inputs  )
+print(DIRname)
+
+# this line is now handled by func above.
+###DIRname = DIRname1.replace('ZBcut%s'%ZBcut1, 'ZBcut%s_X_ZBcut%s'%(ZBcut1, ZBcut2), 1)
 if os.path.isdir('%s/Tree_Correlation_Function/%s/ThBins%s'%(overall_DIR, DIRname,ThBins)) is False:
 	call(['mkdir','-p', '%s/Tree_Correlation_Function/%s/ThBins%s'%(overall_DIR, DIRname,ThBins)])
-
-
 
 def Assemble_TreeCorr_ConfigFile(input_file1, input_file2, output_file, metric, flip_g2, bin_slop, min_sep, max_sep, ThBins, cn):
 	f = open('%s/Tree_Correlation_Function/config_files/config_treecorr%s.yaml'%(overall_DIR,cn), 'w')
@@ -140,5 +133,7 @@ for cycle in range(3):
         t2=time.time()
 
         print( "TreeCorr time for %s is %.1f s" %(output_file, (t2-t1)) )
+        #time.sleep(3) # sleep 3s to see if this helps with saving the output (keeps failing to do so!)
+        # seems to have no effect... still not successfully saving
 
                

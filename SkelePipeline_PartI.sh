@@ -32,31 +32,18 @@ else
     source $pipeline_DIR/ShowSumClass/FilterInputArgs.sh $1 $2 $3 $4 $5
 fi
 
-
-if [ "$RUN" == "Sims_Run" ]; then
-    remove_keyword="*.LOS$los.*"
-    remove_keyword2="*LOS"$los"_*"
-else
-    remove_keyword=$Field"*"
-fi
+remove_keyword="*.LOS$los.*"
+remove_keyword2="*LOS"$los"_*"
 
 if [[ "$DIRname" == *"Mosaic"* ]]; then
     codeflag="_Mosaic" # affects which code runs: [KiDSMocks_DataGrab(_Mosaic).sh]
 fi
 
 # 0. KiDS data and 100 sqdeg mocks require an ldactoasc DataGrab:
-if [ "$RUN" == "KiDS_Run" ]; then
-	# Is it pure-noise run or actual data run?
-	if [[ $Field == *"_NOISE"* ]] && [[ $NOISE == "Y" ]]; then
-		python $pipeline_DIR/KiDS450_ShapeNoiseOnly.py $1 $2 $3
-	else
-		$pipeline_DIR/KiDS450_DataGrab.sh $1 $2 $3
-	fi
-	
-elif [ "$sqdeg" == "100" ]; then
+if [ "$sqdeg" == "100" ]; then
 
     if [[ "$z" == *"KiDS1000"* ]] && [ "$zlo" == "0.1" ] && [ "$zhi" == "1.2" ]; then
-	echo " !!! DOING A KiDS-1000 MOCK RUN w/ NO TOMOGRAPHY - CYCLING THROUGH THE zBINS !!! "
+	echo " !!! DOING A KiDS-1000 MOCK OR DATA RUN w/ NO TOMOGRAPHY - CYCLING THROUGH THE zBINS !!! "
 	# Have to run on all tomo bins, then concatenate the resulting cat's.
 	paramfile1=$2
 	source $pipeline_DIR/ShowSumClass/Identify_KiDS1000_zbin.sh $zlo $zhi
@@ -70,6 +57,7 @@ elif [ "$sqdeg" == "100" ]; then
 	    $pipeline_DIR/KiDSMocks_DataGrab${codeflag}.sh $1 $tmp_paramfile $3 $4
 	    python $pipeline_DIR/Sims_DataGrab_MM.py $1 $tmp_paramfile $3 $4  # Add shape noise
 	done
+	
 	# Now piece the catalogues together:
 	source $pipeline_DIR/Mass_Recon/Concatenate_Shear_Cats.sh $1 $2 $3 $4
 	python $pipeline_DIR/Mass_Recon/MM_only.py $1 $paramfile $3 $4 
@@ -77,7 +65,7 @@ elif [ "$sqdeg" == "100" ]; then
 	#rm -f $data_DIR/SLICS_100/bin*/GalCatalog_LOS${3}.fits
 	# ^ commented out: this could upset other jobs on same worker
 	
-    else	
+    else
 	$pipeline_DIR/KiDSMocks_DataGrab${codeflag}.sh $1 $2 $3 $4
 	python $pipeline_DIR/Sims_DataGrab_MM.py $1 $2 $3 $4 $5 # Add in the shape noise
     fi
@@ -157,7 +145,7 @@ fi
 
 #exit
 # 3. get_clipped_shear.py (<Clipping_K>) 
-python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
+#python $pipeline_DIR/Clipping_K/get_clipped_shear.py $1 $2 $3 $4 $5
 if [ $? -eq 1 ]; then
 	echo "$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline."
 	printf "\n$(date): get_clipped_shear.py failed for params: $1 $2 $3 $4 $5. Exiting SkelePipeline." > $pipeline_DIR/Error_Reports/Error_Report.txt

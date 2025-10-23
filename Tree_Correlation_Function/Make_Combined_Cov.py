@@ -1,22 +1,12 @@
 # 06/11/2019, B. M. Giblin, Postdoc, Edinburgh
 # Read in the clipped & unclipped xi+ for all redshift bins and lines of sight, calculate combined covariance.
 
-# 08/05/2024: New additions to the code; made it so the ~200 realisations of K1000 in mosaic mocks
-# are shuffled (no real. has the same LOS across the 18 regions). The cov is then calculated
-# across these ~200 realisations of the survey. This makes it so cov corresponds to well-understood
-# survey area.
-
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
 import os
 import sys
 from astropy.io import fits
-
-funkdir = '/home/bengib/Clipping_Pipeline/ShowSumClass'
-sys.path.insert(0, funkdir)
-from FunkShins import Shuffle_filenames_LOSnR
-
 
 def View_xi(theta, xi_c_all, xi_c_avg, xi_uc_all, xi_uc_avg, pm):
         plt.figure()
@@ -50,17 +40,13 @@ else:
 Survey = 'KiDS1000'
 MRres = 'MRres140.64arcs_' #'60arcs_'
 Mask = 'Mosaic'
-noise = [ 'SN0.27', 'SN0.258', 'SN0.273', 'SN0.254', 'SN0.27']  #['SN0.265'] 
+#noise = [ 'SN0.27', 'SN0.258', 'SN0.273', 'SN0.254', 'SN0.27']  #['SN0.265'] 
+#ZBcut = ['0.1-0.3', '0.3-0.5', '0.5-0.7', '0.7-0.9', '0.9-1.2'] #['0.1-1.2']
+# use this for ZBcut cuts:
+noise = [ 'SN0.254', 'SN0.27']
+ZBcut = ['0.7-0.9', '0.9-1.2']
 
-ZBcut = ['0.1-0.3', '0.3-0.5', '0.5-0.7', '0.7-0.9', '0.9-1.2'] #['0.1-1.2']
-
-# USE THIS FOR ZBCUTs
-#noise = ['SN0.254', 'SN0.27']
-#ZBcut = ['0.7-0.9', '0.9-1.2']
-
-NLOS_flag = 2170 #Nreal for 18 region K1000 survey. 3906 #715
-# This arg relates to the 217x18 matrix which indicates how the LOS&R are shuffled
-Shuffle_Config = 0     # the seed used for the shufflin'  
+NLOS_flag = 3906 #715
 
 # My LSST-like specs
 #Survey = 'LSST'
@@ -84,10 +70,9 @@ elif Mask == 'NoMask':
 Combine_with_PDF = True
 PDF_SS_label = 'SS1.408-2.816-5.631' 
 PDF_nbins = 4
-PDF_DIR = '/home/bengib/Clipping_Pipeline/Mass_Recon/%s100Sqdeg_%s_%s_%sGpAM_z%s_ZBcut%s/' %(MRres,'SNCycle', #noise[-1],
-                                                                                             Mask,Survey, Survey,
+PDF_DIR = '/home/bengib/Clipping_Pipeline/Mass_Recon/%s100Sqdeg_%s_%s_%sGpAM_z%s_ZBcut%s/' %(MRres,noise[-1],Mask,
+                                                                                            Survey, Survey,
                                                                                             ZBcut[-1])
-
 LOS_savetag = 'All'
 
 # Assemble the directories to cycle through
@@ -103,34 +88,28 @@ if Auto_Or_Cross == 'Auto':
 elif Auto_Or_Cross == 'Cross':
         for i in range(len(ZBcut)):
                 for j in range(i, len(ZBcut)):
-                        DIRname.append('%s/%s100Sqdeg_SNCycle_%s_%sGpAM_z%s_ZBcut%s_X_ZBcut%s%s/ThBins9' %(HOME_DIR, MRres,#noise[i],
-                                                                                                           Mask,
-                                                                                                           Survey,
-                                                                                                           Survey,
-                                                                                                           ZBcut[i],
-                                                                                                           ZBcut[j],
-                                                                                                           cosmol_flag))
+                        DIRname.append('%s/%s100Sqdeg_%s_%s_%sGpAM_z%s_ZBcut%s_X_ZBcut%s%s/ThBins9' %(HOME_DIR, MRres,
+                                                                                                      noise[i],Mask,
+                                                                                                      Survey,
+                                                                                                      Survey,
+                                                                                                      ZBcut[i],
+                                                                                                      ZBcut[j],
+                                                                                                      cosmol_flag))
                 
 dir_cycle = len(DIRname)
-
-if 'Cycle' in DIRname[0]:
-        exflag='n*' # extra flag so all the noise realisations get globbed in the loop
-else:
-        exflag='' # noise real. aren't looked for. 
-
-
 SS = [2.816] #1, 9.33, 84.85 
         
 if mock_Type == 'SLICS':
-        filenames_c = sorted( glob.glob( '%s/%s_%s.%sGpAM.LOS*R1%s.SS%s.rCLIP_X3sigma.CorrFun.asc'%(DIRname[0],noise[0],
-                                                                                                    ftag,Survey, exflag,SS[0]) ) )
+        filenames_c = sorted( glob.glob( '%s/%s_%s.%sGpAM.LOS*.SS%s.rCLIP_X3sigma.CorrFun.asc'%(DIRname[0],noise[0],
+                                                                                                ftag,Survey,
+                                                                                                SS[0]) ) )
         Realisations_c = len(filenames_c)
-        filenames_uc = sorted( glob.glob( '%s/%s_%s.%sGpAM.LOS*R1%s.ORIG.CorrFun.asc'%(DIRname[0],noise[0],
-                                                                                         ftag, Survey, exflag)) )
+        filenames_uc = sorted( glob.glob( '%s/%s_%s.%sGpAM.LOS*.ORIG.CorrFun.asc'%(DIRname[0],noise[0],
+                                                                                   ftag, Survey)) )
         Realisations_uc = len(filenames_uc)
+        
         ID = 'Fiducial SLICS'
         
-Regions = 18
 nbins=9
 len_array = nbins*len(SS)*dir_cycle
 # clipped
@@ -144,81 +123,47 @@ xi_m_uc_all = np.zeros([ Realisations_uc, len_array ]) # xi-
 xi_p_uc_avg = np.zeros_like( xi_p_c_avg )
 xi_m_uc_avg = np.zeros_like( xi_p_c_avg )
 
-# old lines - to be deleted after test on 1/7/24
-xi_p_uc_all2 = np.zeros([ Realisations_uc, len_array ])
-xi_m_uc_all2 = np.zeros([ Realisations_uc, len_array ])
-xi_p_uc_avg2 = np.zeros_like( xi_p_c_avg )
-xi_m_uc_avg2 = np.zeros_like( xi_p_c_avg )
-
-# weights (needed because different regions have different num. gals):
-weights = np.zeros([ Realisations_uc, Regions, len_array ]) # store weights for all LOS & and region
-weights_sum = np.zeros([ Realisations_uc, len_array ])        # sum of weights across R for each realisation
-                                                            # (weights are identical for clipped & unclipped,
-                                                            # almost the same across LOS,
-                                                            # but are a strong function of region R). 
 
 index = 0      # used to append PDFs of different SS and (noise/ZBcuts) to calc overall Covariance. 
 for ss in range(len(SS)):
         for d in range(dir_cycle):
                 print( "------------- On mock-type %s, Cosmol %s, SS %s, DIRname %s -----------" %(mock_Type, ID,SS[ss],DIRname[d]) )
-                for R in range(1,Regions+1):
-                        print(" xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Region %s xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx " %R)
-                        filenames_c = sorted( glob.glob( '%s/*_%s.%sGpAM.LOS*R%s%s.SS%s.rCLIP_X3sigma.CorrFun.asc'%(DIRname[d],
-                                                                                                                    ftag,Survey,R,
-                                                                                                                    exflag, SS[ss])) )
-                        filenames_uc = sorted( glob.glob( '%s/*_%s.%sGpAM.LOS*R%s%s.ORIG.CorrFun.asc'%(DIRname[d],ftag,Survey,R,exflag)) )
+                                                                                            
+                filenames_c = sorted( glob.glob( '%s/*_%s.%sGpAM.LOS*.SS%s.rCLIP_X3sigma.CorrFun.asc'%(DIRname[d],
+                                                                                                       ftag,Survey,
+                                                                                                       SS[ss])) )
+                filenames_uc = sorted( glob.glob( '%s/*_%s.%sGpAM.LOS*.ORIG.CorrFun.asc'%(DIRname[d],ftag,Survey)) )
 
-                        # if statements to exit if number of files across zbins differs
-                        if len(filenames_c) != Realisations_c:
-                                print("There's %s clipped filenames in first DIRname." %Realisations_c)
-                                print("But only found %s in DIRname number %s! EXITING." %(len(filenames_c), d) )
-                                sys.exit()
-                        if len(filenames_uc) != Realisations_uc:
-                                print("There's %s unclipped filenames in first DIRname." %Realisations_uc)
-                                print("But only found %s in DIRname number %s! EXITING." %(len(filenames_uc), d) )
-                                sys.exit()
-                                
-                        # shuffle the LOS for this R
-                        filenames_c = Shuffle_filenames_LOSnR( Shuffle_Config, filenames_c, R )
-                        filenames_uc = Shuffle_filenames_LOSnR( Shuffle_Config, filenames_uc, R )
-                        theta = np.loadtxt( filenames_c[0], usecols=(0,), unpack=True)
-                        for i in range(len(filenames_c)):
-                                #print( "Reading in clipped file %s of %s"%(i,len(filenames_c)) )
-                                tmp_xip, tmp_xim, tmp_w = np.loadtxt( filenames_c[i], usecols=(3,4,9), unpack=True)
-                                xi_p_c_all[i, index*nbins:(index+1)*nbins] += ( tmp_xip * tmp_w )
-                                xi_m_c_all[i, index*nbins:(index+1)*nbins] += ( tmp_xim * tmp_w )
-                                weights[i,R-1, index*nbins:(index+1)*nbins] = tmp_w
-                                weights_sum[i, index*nbins:(index+1)*nbins] += tmp_w
-                                # 01/07/24: Altered this to do weight xi+/-; divide by sum of weights below.
-                                
-                        for i in range(len(filenames_uc)):
-                                #print( "Reading in unclipped file %s of %s"%(i,len(filenames_uc)) )
-                                tmp_xip, tmp_xim = np.loadtxt( filenames_uc[i], usecols=(3,4), unpack=True)
-                                xi_p_uc_all[i, index*nbins:(index+1)*nbins] += ( tmp_xip * weights[i,R-1, index*nbins:(index+1)*nbins] )
-                                xi_m_uc_all[i, index*nbins:(index+1)*nbins] += ( tmp_xim * weights[i,R-1, index*nbins:(index+1)*nbins] )
-                                # old lines - delete these!:
-                                xi_p_uc_all2[i, index*nbins:(index+1)*nbins] += np.loadtxt( filenames_uc[i], usecols=(3,), unpack=True) /Regions
-                                xi_m_uc_all2[i, index*nbins:(index+1)*nbins] += np.loadtxt( filenames_uc[i], usecols=(4,), unpack=True) /Regions
+                # if statements to exit if number of files across zbins differs
+                if len(filenames_c) != Realisations_c:
+                        print("There's %s clipped filenames in first DIRname." %Realisations_c)
+                        print("But only found %s in DIRname number %s! EXITING." %(len(filenames_c), d) )
+                        sys.exit()
+                if len(filenames_uc) != Realisations_uc:
+                        print("There's %s unclipped filenames in first DIRname." %Realisations_uc)
+                        print("But only found %s in DIRname number %s! EXITING." %(len(filenames_uc), d) )
+                        sys.exit()
+                        
+                
+                for i in range(len(filenames_c)):
+                        print( "Reading in clipped file %s of %s"%(i,len(filenames_c)) )
+                        theta, xi_p_c_all[i, index*nbins:(index+1)*nbins] = np.loadtxt( filenames_c[i], usecols=(1,3), unpack=True)
+                        theta, xi_m_c_all[i, index*nbins:(index+1)*nbins] = np.loadtxt( filenames_c[i], usecols=(1,4), unpack=True)
+                        
+                for i in range(len(filenames_uc)):
+                        print( "Reading in unclipped file %s of %s"%(i,len(filenames_uc)) )
+                        xi_p_uc_all[i, index*nbins:(index+1)*nbins] = np.loadtxt( filenames_uc[i], usecols=(3,), unpack=True)
+                        xi_m_uc_all[i, index*nbins:(index+1)*nbins] = np.loadtxt( filenames_uc[i], usecols=(4,), unpack=True)
 
-                # Now need to divide the (per-LOS) weighted-xipm by the sum of weights, where sum was done across Regions.
-                xi_p_c_all[:, index*nbins:(index+1)*nbins] /= weights_sum[:, index*nbins:(index+1)*nbins]
-                xi_m_c_all[:, index*nbins:(index+1)*nbins] /= weights_sum[:, index*nbins:(index+1)*nbins]
-                xi_p_uc_all[:, index*nbins:(index+1)*nbins] /= weights_sum[:, index*nbins:(index+1)*nbins]
-                xi_m_uc_all[:, index*nbins:(index+1)*nbins] /= weights_sum[:, index*nbins:(index+1)*nbins]
-
-                # Now we have the weighted-avg (across R) for each xipm, avg these across Nlos x Nnoise realisations:
                 for i in range(index*nbins, (index+1)*nbins):
                         xi_p_c_avg[i] =  np.mean( xi_p_c_all[:,i] )
                         xi_p_uc_avg[i] = np.mean( xi_p_uc_all[:,i] )
                         xi_m_c_avg[i] =  np.mean( xi_m_c_all[:,i] )
                         xi_m_uc_avg[i] = np.mean( xi_m_uc_all[:,i] )
-
-                        # old lines - delete these!
-                        xi_p_uc_avg2[i] =  np.mean( xi_p_uc_all2[:,i] )
-                        xi_m_uc_avg2[i] = np.mean( xi_m_uc_all2[:,i] )
-                                
+                        
                 index+=1
 
+                
 # Plot the xi+/-
 #for i in range(dir_cycle):
 #        View_xi( theta,
@@ -238,12 +183,10 @@ if not os.path.exists(OUTDIR_c):
 if not os.path.exists(OUTDIR_uc):
     os.makedirs(OUTDIR_uc)
                          
-fname_cov_p_c = '%s/%s_%s.%sGpAM.NLOS%s-Shuffle%s.SS%s.rCLIP_X3sigma.CxC+.CovMat.npy' %(OUTDIR_c, noise[0], ftag, Survey,
-                                                                                        len(filenames_c),Shuffle_Config,SS[0])
-fname_cov_p_uc = '%s/%s_%s.%sGpAM.NLOS%s-Shuffle%s.ORIG.UCxUC+.CovMat.npy' %(OUTDIR_uc, noise[0], ftag, Survey, len(filenames_uc),Shuffle_Config)
-fname_cov_m_c = '%s/%s_%s.%sGpAM.NLOS%s-Shuffle%s.SS%s.rCLIP_X3sigma.CxC-.CovMat.npy' %(OUTDIR_c, noise[0], ftag, Survey,
-                                                                                        len(filenames_c),Shuffle_Config,SS[0])
-fname_cov_m_uc = '%s/%s_%s.%sGpAM.NLOS%s-Shuffle%s.ORIG.UCxUC-.CovMat.npy' %(OUTDIR_uc, noise[0], ftag, Survey, len(filenames_uc),Shuffle_Config)
+fname_cov_p_c = '%s/%s_%s.%sGpAM.NLOS%s.SS%s.rCLIP_X3sigma.CxC+.CovMat.npy' %(OUTDIR_c, noise[0], ftag, Survey, len(filenames_c),SS[0])
+fname_cov_p_uc = '%s/%s_%s.%sGpAM.NLOS%s.ORIG.UCxUC+.CovMat.npy' %(OUTDIR_uc, noise[0], ftag, Survey, len(filenames_uc))
+fname_cov_m_c = '%s/%s_%s.%sGpAM.NLOS%s.SS%s.rCLIP_X3sigma.CxC-.CovMat.npy' %(OUTDIR_c, noise[0], ftag, Survey, len(filenames_c),SS[0])
+fname_cov_m_uc = '%s/%s_%s.%sGpAM.NLOS%s.ORIG.UCxUC-.CovMat.npy' %(OUTDIR_uc, noise[0], ftag, Survey, len(filenames_uc))
 
 ss_label = 'SS'
 for ss in range(len(SS)):
@@ -301,19 +244,17 @@ if dir_cycle>1:
                                         zb_label+='%s%s_' %(zb1, zb2)
                                         #zb_label += '%s%s_' %(i+1,j+1)
                                         
-                zb_label = '.' + zb_label[:-1] 
+                zb_label = zb_label[:-1]
                 # Injecting zb_label into the filesavename if there's multiple redshifts
                 # Saving the cov for multiple zbins in the directory specified by the final ZBcut flag.
-                fname_cov_p_c = fname_cov_p_c.split('.npy')[0] + '%s.npy' %zb_label
-                fname_cov_p_uc = fname_cov_p_uc.split('.npy')[0] + '%s.npy' %zb_label
-                fname_cov_m_c = fname_cov_m_c.split('.npy')[0] + '%s.npy' %zb_label
-                fname_cov_m_uc = fname_cov_m_uc.split('.npy')[0] + '%s.npy' %zb_label
+                fname_cov_p_c = fname_cov_p_c.split('.npy')[0] + '.%s.npy' %zb_label
+                fname_cov_p_uc = fname_cov_p_uc.split('.npy')[0] + '.%s.npy' %zb_label
+                fname_cov_m_c = fname_cov_m_c.split('.npy')[0] + '.%s.npy' %zb_label
+                fname_cov_m_uc = fname_cov_m_uc.split('.npy')[0] + '.%s.npy' %zb_label
                 
         else:
                 print("I haven't coded up what the multiple-zbin covariance savename should be for anything other than KiDS1000-like and LSST-like mocks. This is neither, but you have set multiple redshifts. Edit this bit of code to continue.")
                 sys.exit()
-else:
-        zb_label = ''
 
 cov_p_c = np.cov(xi_p_c_all, rowvar=False)
 cov_p_uc = np.cov(xi_p_uc_all, rowvar=False)
@@ -364,20 +305,19 @@ else:
         print("Number of clipped and unclipped files is different. Wont calc. combined cov of them both. EXITING.")
         sys.exit()
 
-PDF_fname = PDF_DIR + '%s_%s.%sGpAM.NLOS%s-Shuffle%s.%s.SNRPDF_%sbins%s.npy' %(noise[-1],
-                                                                                ftag,Survey,
-                                                                                NLOS_flag,
-	                                                                        Shuffle_Config,
-                                                                                PDF_SS_label,
-                                                                                PDF_nbins,zb_label.replace('_','-'))
-# (annoyingly I made the PDF files with a '_' instead of a '-' in zb_label
 
+
+PDF_fname = PDF_DIR + '%s_%s.%sGpAM.NLOS%s.%s.SNRPDF_%sbins.%s.npy' %(noise[-1],
+                                                                      ftag,Survey,
+                                                                      NLOS_flag,
+                                                                      PDF_SS_label,
+                                                                      PDF_nbins,zb_label) 
 if Combine_with_PDF:
         PDFs = np.load( PDF_fname )
         # Combined PDF with UNCLIPPED xi_+/-
         PDF_xi_uc_all = np.concatenate((PDFs,xi_uc_all), axis=1)
         cov_PDF_uc = np.cov( PDF_xi_uc_all, rowvar=False )
-        fname_cov_PDF_uc = fname_cov_uc.replace('UCxUC+-', 'PDF-%s-UCxUC+-'%PDF_SS_label, 1)
+        fname_cov_PDF_uc = fname_cov_uc.replace('UCxUC+-', 'PDF-6.6arcmin-UCxUC+-', 1)
         np.save( fname_cov_PDF_uc, cov_PDF_uc )
 
 

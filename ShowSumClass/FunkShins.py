@@ -291,6 +291,19 @@ def Combine_zbin_DIRname(input_args):
  		zlo,zhi = zlo_B,zhi_B
 
  	DIRname = DIRname1.split('ZBcut')[0] + 'ZBcut%s-%s_X_ZBcut' %(zlo,zhi) + DIRname2.split('ZBcut')[-1]
+
+ 	# Do the same with the systematics; e.g. dz2 --> dz2_X_dz3:
+ 	# First figure out if there are Sys included:
+ 	if "_dz" in DIRname1:
+ 		Sys1 = 'dz' + DIRname1.split('_dz')[-1].split('_')[0]
+ 		Sys2 = 'dz' + DIRname2.split('_dz')[-1].split('_')[0]
+ 	else:
+ 		Sys1 = ""
+ 		Sys2 = ""
+ 	if Sys1 != Sys2:
+ 		# different dz values in zbinX and zbinY:
+ 		DIRname = DIRname.replace(Sys1, '%s_X_%s'%(Sys1,Sys2))
+
  	return name, gpam, DIRname, SS, sigma, SN, mask, z, PS, sqdeg, zlo_A, zhi_A, ThBins, OATH, los, los_end
 
 

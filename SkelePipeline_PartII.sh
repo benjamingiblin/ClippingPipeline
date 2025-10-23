@@ -32,7 +32,7 @@ Tree='Y' 				# If ='Y' then it uses TreeCorr, otherwise it uses Athena
 ##### DECIDE IF YOU WANT TO USE ATHENA OR TREECORR #######
 
 
-if [ "$RUN" == "Sims_Run" ]; then
+if [ "$RUN" == "Sims_Run" ] || [ "$RUN" == "KiDS_Run" ]; then
 	remove_keyword="*.LOS$los.*"
 	remove_keyword2="*LOS"$los"_*"
 else
